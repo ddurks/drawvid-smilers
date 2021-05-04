@@ -79,11 +79,16 @@ class DrawvidDotCom extends Phaser.Scene {
     }
 
     handleClouds() {
-        if (this.clouds.length < 3) {
+        this.clouds.forEach( cloud => {
+            if (cloud.x >= GAME.SIZE) {
+                cloud.setPosition(-32, getRandomInt(0, GAME.SIZE/2));
+            }
+        })
+        if (this.clouds.length < 10 && getRandomInt(0, 150) === 150) {
             let cloud = this.physics.add.sprite(-32, getRandomInt(0, GAME.SIZE/2), 'cloud');
             cloud.setFrame(getRandomInt(0, 3));
             cloud.body.setAllowGravity(false);
-            cloud.setVelocityX(100);
+            cloud.setVelocityX(10);
             this.clouds.push(cloud);
             console.log("cloud added");
         }
