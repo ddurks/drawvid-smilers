@@ -5,21 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>drawvid.com</title>
     <style>
-        html, body {margin: 0; height: 100%; overflow: hidden}
-
         body {
             background-color: black;
-            padding: 0px;
-            margin: 0px;
-        }
-
-        .container {
-            display: flex;
-            justify-content: center;
-        }
-
-        .item {
-            margin: 1rem;
         }
 
         #phaser-div {
@@ -27,8 +14,18 @@
             top:0;
         }
 
-        canvas {
-            margin-top: 0;
+        .image-container {
+            width: 300px;
+            height: 300px;
+            background: #eee;
+            text-align: center;
+            line-height: 300px;
+            display: none;
+        }
+
+        .image-container img {
+            vertical-align: middle;
+            z-index: 10000;
         }
     </style>
     <link rel='icon', href='/assets/favicon.ico'>
@@ -59,6 +56,9 @@
     <script src="/src/smilers.js"></script>
 </head>
 <body>
+    <div class="image-container">
+        <img id="artImg">
+    </div>
     <div id="phaser-div"></div>
 </body>
 </html>

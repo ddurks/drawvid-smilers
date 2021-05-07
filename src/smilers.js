@@ -9,7 +9,7 @@ const GAME = {
 const FRAMERATE = 8;
 const GRAVITY = 400, GROUNDY = GAME.SIZE - 124;
 const MIN_CLOUDS = 7, MAX_CLOUDS = 10, CLOUDMINSPEED = 10, CLOUDMAXSPEED = 25;
-const MAX_BUTTERFLIES = 4;
+const MAX_BUTTERFLIES = 7;
 const PLAYER_SPEED = 150, PLAYER_SIZE=16, JUMP_VELOCITY = -GRAVITY*2/3;
 const GLOBAL_SCALE = 4;
 
@@ -60,7 +60,57 @@ class PopUp extends Phaser.GameObjects.Group {
         this.textBody.setVisible(false);
         this.textBody.setScrollFactor(0);
 
+        this.displayed = false;
+
         return this;
+    }
+    
+    setText(text) {
+        this.textBody.setText(text);
+    }
+
+    setTextColor(color) {
+        this.textBody.setColor(color);
+    }
+
+    setTextStyle(style) {
+        this.textBody.setFontStyle(style);
+    }
+
+    setTextLocation(x, y) {
+        this.textBody.setPosition(x, y);
+    }
+
+    addButton(scene) {
+        this.button = scene.add.image(GAME.SIZE*2/3, GAME.SIZE*7/9, 'button').setInteractive();
+        this.button.on('pointerdown', () => this.buttonPressed());
+        this.button.setDepth(12);
+        this.button.setVisible(false);
+        this.button.setScrollFactor(0);
+        this.button.setScale(GLOBAL_SCALE)
+        this.buttonText = scene.add.text(GAME.SIZE*2/3, GAME.SIZE*7/9, "random", {
+            fontFamily: 'Arial',
+            fontStyle: 'bolder',
+            fontSize: '24px',
+            color:  '#ffffff',
+            wordWrap: {
+                width: 3*GAME.SIZE/5,
+                useAdvancedWrap: true
+            },
+            align: 'center'
+        });
+        this.buttonText.setOrigin(0.5, 0.5);
+        this.buttonText.setDepth(13);
+        this.buttonText.setVisible(false);
+        this.buttonText.setScrollFactor(0);
+    }
+
+    buttonPressed() {
+        this.buttonCallback ? this.buttonCallback() : null;
+    }
+
+    setButtonCallback(callback) {
+        this.buttonCallback = callback;
     }
 
     display(text) {
@@ -68,6 +118,11 @@ class PopUp extends Phaser.GameObjects.Group {
         this.popup.setVisible(true);
         this.x.setVisible(true);
         this.textBody.setVisible(true);
+        if (this.button && this.buttonText) {
+            this.button.setVisible(true);
+            this.buttonText.setVisible(true);
+        }
+        this.displayed = true;
         return this;
     }
 
@@ -75,10 +130,22 @@ class PopUp extends Phaser.GameObjects.Group {
         this.popup.setVisible(false);
         this.x.setVisible(false);
         this.textBody.setVisible(false);
+        this.displayed = false;
+        if (this.button && this.buttonText) {
+            this.button.setVisible(false);
+            this.buttonText.setVisible(false);
+        }
+        if(this.closeCallback) {
+            this.closeCallback();
+        }
     }
 
     onTextClick(callback) {
         this.textBody.on('pointerdown', callback);
+    }
+
+    onClose(callback) {
+        this.closeCallback = callback;
     }
 }
 
@@ -217,11 +284,30 @@ class Butterfly extends Phaser.Physics.Arcade.Sprite {
     }
 }
 
+class Sparkle extends Phaser.Physics.Arcade.Sprite {
+    constructor(scene, x, y) {
+        super(scene, x, y, 'sparkle');
+
+        let sparkle = scene.add.existing(this);
+        sparkle.setScale(GLOBAL_SCALE);
+
+        this.anims.create({
+            key: 'sparkle', 
+            frameRate: FRAMERATE,
+            frames: this.anims.generateFrameNumbers('sparkle', { frames: [0, 1, 2, 3, 4, 5, 6] }),
+            repeat: 0
+        });
+
+        this.anims.play('sparkle');
+
+        return this;
+    }
+}
+
 class Flower extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y, texture) {
         super(scene, x, y, texture);
 
-        scene.add.existing(this);
         let flower = scene.add.existing(this);
         flower.setScale(GLOBAL_SCALE);
 
@@ -247,6 +333,8 @@ class DrawvidDotCom extends Phaser.Scene {
         super('DrawvidDotCom');
         this.clouds = new Array();
         this.butterflies = new Array();
+        this.sparkles = new Array();
+        this.currentGalleryIndex = 0;
     }
 
     preload() {
@@ -254,13 +342,10 @@ class DrawvidDotCom extends Phaser.Scene {
         this.load.image('bg', 'assets/bg.png');
         this.load.image('ground', 'assets/ground.png');
         this.load.image('button', 'assets/button.png');
-        this.load.image('code', 'assets/code.png');
-        this.load.image('about', 'assets/about.png');
-        this.load.image('art', 'assets/art.png');
-        this.load.image('home', 'assets/home.png');
-        this.load.image('about', 'assets/about.png');
-        this.load.image('code', 'assets/code.png');
-        this.load.image('art', 'assets/art.png');
+        this.load.image('code', 'assets/code-button.png');
+        this.load.image('about', 'assets/about-button.png');
+        this.load.image('art', 'assets/art-button.png');
+        this.load.image('home', 'assets/home-button.png');
         this.load.image('logo', 'assets/drawvid-logo.png');
         this.load.image('popup', 'assets/popup.png');
         this.load.image('x', 'assets/x.png');
@@ -272,6 +357,7 @@ class DrawvidDotCom extends Phaser.Scene {
         this.load.spritesheet('oflower', 'assets/o-flower.png', { frameWidth: 16, frameHeight: 16, margin: 0, spacing: 0 });
         this.load.spritesheet('cloud', 'assets/clouds.png', { frameWidth: 32, frameHeight: 16, margin: 0, spacing: 0 });
         this.load.spritesheet('faces', 'assets/faces.png', { frameWidth: 16, frameHeight: 16, margin: 0, spacing: 0 });
+        this.load.spritesheet('sparkle', 'assets/sparkle.png', { frameWidth: 16, frameHeight: 16, margin: 0, spacing: 0 });
         this.load.spritesheet('purpleButterfly', 'assets/butterfly-purple.png', { frameWidth: 16, frameHeight: 16, margin: 0, spacing: 0 });
 		this.load.spritesheet('blueButterfly', 'assets/butterfly-blue.png', { frameWidth: 16, frameHeight: 16, margin: 0, spacing: 0 });
 		this.load.spritesheet('orangeButterfly', 'assets/butterfly-orange.png', { frameWidth: 16, frameHeight: 16, margin: 0, spacing: 0 });
@@ -317,7 +403,30 @@ class DrawvidDotCom extends Phaser.Scene {
             space: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE, false)
         };
 
-        this.popup = new PopUp(this);
+        this.aboutPopup = new PopUp(this);
+        this.aboutPopup.setTextColor("#000000");
+        this.artPopup = new PopUp(this);
+        this.artPopup.setTextColor("#0000FF");
+        this.artPopup.addButton(this);
+        this.artPopup.setButtonCallback(() => {
+            this.currentGalleryIndex = getRandomInt(0, images.length-1);
+            this.img = new Image();
+            this.img.src = images[this.currentGalleryIndex].src;
+            this.img.onload = () => {
+                this.fitImageInBox(this.img, GAME.SIZE*2/5);
+                this.image ? this.image.destroy() : null;
+                this.image = this.add.dom(GAME.SIZE/2, GAME.SIZE/2 - PLAYER_SIZE*3, this.img);
+                this.artPopup.display(images[this.currentGalleryIndex].title);            }
+        })
+        this.artPopup.setTextLocation(GAME.SIZE/2, GAME.SIZE/2 + PLAYER_SIZE* (GLOBAL_SCALE));
+        this.artPopup.onTextClick(() => {
+            window.open(images[this.currentGalleryIndex].src);
+        });
+        this.artPopup.onClose(() => {
+            if (this.image) {
+                this.image.destroy();
+            }
+        });
     }
 
     addButtons() {
@@ -339,22 +448,45 @@ class DrawvidDotCom extends Phaser.Scene {
         art.body.setAllowGravity(false);
         art.setScale(GLOBAL_SCALE);
         art.on('pointerdown', () => {
-            this.artPopUp();
+            if (!this.artPopup.displayed) {
+                this.artPopUp();
+            }
         });
         art.setDepth(11);
     }
 
     aboutPopUp() {
-        this.popup.display("my name is david.\ni like to draw and build computer programs.\n@drawvid on twitter and instagram.\tthis site was built using Phaser.js");
+        this.aboutPopup.display("david🤫 a.k.a. drawvid😈  art🎨 + computer software💾  @drawvid👨‍💻 on twitter🐦 and instagram📸  this site🏡 was built🛠️ using Phaser.js🚀");
     }
 
     artPopUp() {
         if (galleryLoaded) {
-            shuffleGallery();
-            let artPopup = this.popup.display(images[0].title);
-            artPopup.onTextClick(() => {
-                window.open(images[0].src);
-            });
+            this.currentGalleryIndex = getRandomInt(0, images.length-1);
+            this.img = new Image();
+            this.img.src = images[this.currentGalleryIndex].src;
+            this.img.onload = () => {
+                this.fitImageInBox(this.img, GAME.SIZE*2/5);
+                this.image ? this.image.destroy() : null;
+                this.image = this.add.dom(GAME.SIZE/2, GAME.SIZE/2 - PLAYER_SIZE*3, this.img);
+                this.artPopup.display(images[this.currentGalleryIndex].title);
+            }
+        }
+    }
+
+    fitImageInBox(img, boxSize) {
+        let ogHeight = img.height, ogWidth = img.width;
+        let scale;
+        if (img.width > img.height) {
+            img.width = boxSize;
+            scale = img.width / ogWidth;
+            img.height = scale*ogHeight;
+        } else if (img.width !== img.height) {
+            img.height = boxSize;
+            scale = img.height / ogHeight;
+            img.width = scale*ogWidth;
+        } else {
+            img.height = boxSize;
+            img.width = boxSize;
         }
     }
 
@@ -412,6 +544,12 @@ class DrawvidDotCom extends Phaser.Scene {
         if(this.butterflies.length < MAX_BUTTERFLIES) {
             let butterfly = new Butterfly(this, getRandomInt(0, GROUNDY), getRandomInt(0, GAME.SIZE));
             this.butterflies.push(butterfly);
+            this.physics.add.collider(this.player, butterfly, (player, butterfly) => {
+                let sparkle = new Sparkle(this, butterfly.x, butterfly.y);
+                this.sparkles.push(sparkle);
+                butterfly.x = GAME.SIZE + GAME.SIZE;
+                butterfly.y = GAME.SIZE + GAME.SIZE;
+            });
             return butterfly;
         }
         return null;
@@ -419,7 +557,7 @@ class DrawvidDotCom extends Phaser.Scene {
 
     updateAllButterflies() {
         if (MAX_BUTTERFLIES > 0) {
-            if (getRandomInt(0, 250) === 69) {
+            if (getRandomInt(0, 150) === 69) {
                 this.generateButterfly();
             }
             this.butterflies.forEach( (butterfly, index, butterflies) => {
@@ -427,6 +565,12 @@ class DrawvidDotCom extends Phaser.Scene {
                 if (!this.cameras.main.worldView.contains(butterfly.x,butterfly.y) || butterfly.y >= GROUNDY) {
                     butterflies.splice(index, 1);
                     butterfly.destroy();
+                }
+            });
+            this.sparkles.forEach( (sparkle, index, sparkles) => {
+                if (sparkle.frame.name.toString() === "6") {
+                    sparkles.splice(index, 1);
+                    sparkle.destroy();
                 }
             });
         }
@@ -504,21 +648,12 @@ class DrawvidDotCom extends Phaser.Scene {
                     title: photoKey.split('/')[1]
                 });
                 if (images.length >= s3Objects.Contents.length-1) {
-                    this.loadImages();
+                    galleryLoaded = true;
                 }
             });
         } catch (e) {
-            return alert('There was an error viewing your album: ' + e.message);
+            return alert('there was an an error retrieving some things from the server :( ' + e.message);
         }
-    }
-
-    loadImages() {
-        // console.log("all images loaded", images.length);
-        // images.forEach((img, index) => {
-        //     console.log(index.toString(), img.src);
-        //     this.load.image(index.toString(), img.src);
-        // });
-        galleryLoaded = true;
     }
 }
 
