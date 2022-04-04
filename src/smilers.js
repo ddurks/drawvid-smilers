@@ -351,6 +351,8 @@ class DrawvidDotCom extends Phaser.Scene {
         this.load.image('x', 'assets/x.png');
         this.load.image('twitter', 'assets/twitter.png');
         this.load.image('insta', 'assets/instagram.png');
+        this.load.image('giphy', 'assets/giphy.png');
+        this.load.image('lounge-button', 'assets/lounge-button.png');
         this.load.spritesheet('smiler', 'assets/smiler.png', { frameWidth: 16, frameHeight: 16, margin: 0, spacing: 0 });
         this.load.spritesheet('pflower', 'assets/p-flower.png', { frameWidth: 16, frameHeight: 16, margin: 0, spacing: 0 });
         this.load.spritesheet('bflower', 'assets/b-flower.png', { frameWidth: 16, frameHeight: 16, margin: 0, spacing: 0 });
@@ -381,18 +383,31 @@ class DrawvidDotCom extends Phaser.Scene {
         let logo = this.add.image(48, 48, 'logo').setInteractive();
         logo.setScale(GLOBAL_SCALE);
 
-        let insta = this.add.image(380, 48, 'insta').setInteractive();
-        insta.setScale(2);
+        let insta = this.add.image(300, 48, 'insta').setInteractive();
+        insta.setScale(GLOBAL_SCALE/2);
         insta.on('pointerdown', () => {
             window.location.href = "https://www.instagram.com/drawvid";
         });
         insta.setDepth(11);
-        let twitter = this.add.image(460, 48, 'twitter').setInteractive();
-        twitter.setScale(2);
+        let twitter = this.add.image(380, 48, 'twitter').setInteractive();
+        twitter.setScale(GLOBAL_SCALE/2);
         twitter.on('pointerdown', () => {
             window.location.href = "https://www.twitter.com/drawvid";
         });
         twitter.setDepth(11);
+        let giphy = this.add.image(460, 48, 'giphy').setInteractive();
+        giphy.setScale(GLOBAL_SCALE/2);
+        giphy.on('pointerdown', () => {
+            window.location.href = "https://www.giphy.com/drawvid";
+        });
+        giphy.setDepth(11);
+
+        let loungeButton = this.add.image(GAME.SIZE/2, GAME.SIZE - (GLOBAL_SCALE * 21), 'lounge-button').setOrigin(0.5, 0).setInteractive();
+        loungeButton.setScale(GLOBAL_SCALE);
+        loungeButton.on('pointerdown', () => {
+            window.location.href = "http://onlinelounge.drawvid.com";
+        });
+        loungeButton.setDepth(11);
 
         // controls
         this.controls = {
@@ -456,7 +471,7 @@ class DrawvidDotCom extends Phaser.Scene {
     }
 
     aboutPopUp() {
-        this.aboutPopup.display("david🤫 a.k.a. drawvid😈  art🎨 + computer software💾  @drawvid👨‍💻 on twitter🐦 and instagram📸  this site🏡 was built🛠️ using Phaser.js🚀");
+        this.aboutPopup.display("david🤫 a.k.a. drawvid😈  art🎨 + computer software💾  @drawvid👨‍💻 on instagram📸 twitter🐦 and giphy🕺 this site🏡 was built🛠️ using 👽Phaser.js🚀");
     }
 
     artPopUp() {
