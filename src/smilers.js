@@ -344,7 +344,7 @@ class DrawvidDotCom extends Phaser.Scene {
         this.load.image('button', 'assets/button.png');
         this.load.image('code', 'assets/code-button.png');
         this.load.image('about', 'assets/about-button.png');
-        this.load.image('art', 'assets/art-button.png');
+        this.load.image('art', 'assets/shop-button.png');
         this.load.image('home', 'assets/home-button.png');
         this.load.image('logo', 'assets/drawvid-logo.png');
         this.load.image('popup', 'assets/popup.png');
@@ -352,6 +352,7 @@ class DrawvidDotCom extends Phaser.Scene {
         this.load.image('twitter', 'assets/twitter.png');
         this.load.image('insta', 'assets/instagram.png');
         this.load.image('giphy', 'assets/giphy.png');
+        this.load.image('patreon', 'assets/patreon.png');
         this.load.image('lounge-button', 'assets/lounge-button.png');
         this.load.spritesheet('smiler', 'assets/smiler.png', { frameWidth: 16, frameHeight: 16, margin: 0, spacing: 0 });
         this.load.spritesheet('pflower', 'assets/p-flower.png', { frameWidth: 16, frameHeight: 16, margin: 0, spacing: 0 });
@@ -401,6 +402,12 @@ class DrawvidDotCom extends Phaser.Scene {
             window.location.href = "https://www.giphy.com/drawvid";
         });
         giphy.setDepth(11);
+        let patreon = this.add.image(220, 48, 'patreon').setInteractive();
+        patreon.setScale(GLOBAL_SCALE/2);
+        patreon.on('pointerdown', () => {
+            window.location.href = "https://www.patreon.com/drawvid";
+        });
+        patreon.setDepth(11);
 
         let loungeButton = this.add.image(GAME.SIZE/2, GAME.SIZE - (GLOBAL_SCALE * 21), 'lounge-button').setOrigin(0.5, 0).setInteractive();
         loungeButton.setScale(GLOBAL_SCALE);
@@ -463,9 +470,10 @@ class DrawvidDotCom extends Phaser.Scene {
         art.body.setAllowGravity(false);
         art.setScale(GLOBAL_SCALE);
         art.on('pointerdown', () => {
-            if (!this.artPopup.displayed) {
-                this.artPopUp();
-            }
+            window.location.href = "/shop";
+            // if (!this.artPopup.displayed) {
+            //     this.artPopUp();
+            // }
         });
         art.setDepth(11);
     }
