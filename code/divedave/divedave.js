@@ -31,6 +31,48 @@ diff = function (num1, num2) {
     }
 }
 
+class CookieManager {
+    createCookie = (name,value,days) => {
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime()+(days*24*60*60*1000));
+            var expires = "; expires="+date.toGMTString();
+        }
+        else var expires = "";
+        document.cookie = name+"="+value+expires+"; path=/";
+    }
+    
+    readCookie = (name) => {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0;i < ca.length;i++) {
+            var c = ca[i];
+            while (c.charAt(0)==' ') c = c.substring(1,c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+        }
+        return null;
+    }
+    
+    eraseCookie = (name) => {
+        createCookie(name,"",-1);
+    }
+}
+
+var CHALLENGE_MODE = true;
+const GRAVITY = 500;
+const WIDTH=1250, HEIGHT=1500, DAVE_SPEED = 300, JUMP_VELOCITY = 500, MIN_SPIN_VELOCITY = 75, MAX_SPIN_VELOCITY = 500, DRAG = 500, ANGULAR_DRAG = 125, MAX_BOOST = 200, IDLE_DELAY = 1000;
+const MIN_CLOUDS = 7, MAX_CLOUDS = 15, CLOUDMINSPEED = 35, CLOUDMAXSPEED = 85;
+const MIN_BIRDS = 0, MAX_BIRDS = 3, BIRDMINSPEED = 50, BIRDMAXSPEED = 200;
+const HIGH_SCORE_COOKIE = 'highScore';
+var springboard, dave;
+var controls, waterLevel, jumping, landedAt = null, jumpReleasedAt = null;
+var boost = 0, currentVelocity = MIN_SPIN_VELOCITY, tucked = false, tuckCount = 0;
+var streak = 0, totalScore = 0;
+const cookieManager = new CookieManager();
+let storedHighScore = cookieManager.readCookie(HIGH_SCORE_COOKIE);
+var highScore = storedHighScore ? storedHighScore : 0;
+var highScoreSession = false;
+
 class MainMenu extends Phaser.Scene {
     constructor() {
         super('MainMenu');
@@ -39,6 +81,11 @@ class MainMenu extends Phaser.Scene {
     preload() {
         this.load.image('cover', 'assets/cover.png');
         this.load.image('panel', 'assets/panel.png');
+        this.load.image('controls-help', 'assets/controls-help.png');
+        this.load.image('arcade', 'assets/arcade.png');
+        this.load.image('challenge', 'assets/challenge.png');
+        this.load.image('sign', 'assets/sign.png');
+        this.load.bitmapFont('black-arial', 'assets/fonts/black-arial.png', 'assets/fonts/black-arial.xml');
     }
 
     displayInstructions(strings) {
@@ -53,43 +100,54 @@ class MainMenu extends Phaser.Scene {
     create() {
         let instructionStrings = IS_MOBILE ? 
             [
-                "touch left and right", 
+                "touch left and right buttons", 
                 "to move dave",
                 "",
-                "touch above dave to jump", 
+                "touch the jump button to jump", 
                 "while above the board",
                 "",
                 "jump quickly multiple times",
                 "near the end of the board",
                 "to jump higher",
                 "",
-                "touch anywhere to flip",
+                "touch the flip button to flip",
                 "once dave has left the board"
             ] : [
-                "[A] and [D] keys",
+                "[A] and [D] or [<] [>] arrow keys",
                 "to move dave",
                 "",
-                "[W] key to jump",
+                "[W] or [^] arrow key to jump",
                 "while above the board",
                 "",
                 "jump quickly multiple times",
                 "near the end of the board", 
                 "to jump higher",
                 "",
-                "[R] key to flip",
+                "[R] [^] or [space] to flip",
                 "once dave has left the board"
             ];
         this.input.keyboard.on('keydown', this.handleKey, this);
-        var cover = this.add.image(WIDTH/2, HEIGHT/2  - 100, 'cover');
+        var cover = this.add.image(WIDTH/2, HEIGHT/2 - 75, 'cover');
         cover.setScale(2);
-        var instructions = this.add.text(WIDTH/2, HEIGHT/2 + 425, 'controls', { align: 'center', color: 'white', fontFamily: 'Arial', fontSize: '75px', fontStyle: 'bold'}).setOrigin(0.5);
+        var instructions = this.add.image(WIDTH - 100, 100, 'controls-help').setOrigin(0.5).setScale(0.5);
         instructions.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
             this.displayInstructions(instructionStrings);
-        })
-        var startText = this.add.text(WIDTH/2, HEIGHT/2 + 550, 'start', { align: 'center', color: 'white', fontFamily: 'Arial', fontSize: '100px', fontStyle: 'bold'}).setOrigin(0.5);
+        });
+        var startText = this.add.image(WIDTH/2 + 200, HEIGHT/2 + 570, 'arcade').setOrigin(0.5).setScale(0.5);
         startText.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+            CHALLENGE_MODE = false;
             this.clickStart(this);
-        })
+        });
+        var startChallengeText = this.add.image(WIDTH/2 - 200, HEIGHT/2 + 570, 'challenge').setOrigin(0.5).setScale(0.5);
+        startChallengeText.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+            this.clickStart(this);
+        });
+        if (highScore > 0) {
+            this.add.image(125, 110, 'sign').setRotation(Math.PI).setDepth(23).setScrollFactor(0);
+            this.add.bitmapText(125, 60, 'black-arial', 'YOUR CHALLENGE', 20).setOrigin(0.5).setScrollFactor(0).setDepth(24).setActive(false);
+            this.add.bitmapText(125, 90, 'black-arial', 'HIGH SCORE', 30).setOrigin(0.5).setScrollFactor(0).setDepth(24).setActive(false);
+            this.add.bitmapText(125, 150, 'black-arial', highScore, 50).setOrigin(0.5).setScrollFactor(0).setDepth(24).setActive(false);
+        }
     }
 
     handleKey(e) {
@@ -103,50 +161,46 @@ class MainMenu extends Phaser.Scene {
     }
 
     clickStart(scene) {
-        fadeOutScene('DiveScene', scene, 1500);
+        if (CHALLENGE_MODE) {
+            fadeOutScene('DiveScene', scene, 1500);
+        } else {
+            fadeOutScene('DiveScene', scene, getRandomInt(1500, 10000));
+        }
     }
 }
 
-const GRAVITY = 500;
-const WIDTH=1250, HEIGHT=1500, DAVE_SPEED = 300, JUMP_VELOCITY = 500, MIN_SPIN_VELOCITY = 75, MAX_SPIN_VELOCITY = 500, DRAG = 500, ANGULAR_DRAG = 125, MAX_BOOST = 200, IDLE_DELAY = 1000;
-const MIN_CLOUDS = 7, MAX_CLOUDS = 15, CLOUDMINSPEED = 35, CLOUDMAXSPEED = 85;
-const MIN_BIRDS = 0, MAX_BIRDS = 3, BIRDMINSPEED = 50, BIRDMAXSPEED = 200;
-var springboard, dave;
-var controls, waterLevel, jumping, landedAt = null, jumpReleasedAt = null;
-var boost = 0, currentVelocity = MIN_SPIN_VELOCITY, tucked = false, tuckCount = 0;
-var streak = 0, avgScore = 0, totalScore = 0;
-
 class InfoPanel extends Phaser.GameObjects.Group {
-    constructor(scene) {
+    constructor(scene, depth) {
         super(scene);
-        this.panel = scene.add.image(WIDTH/2, HEIGHT/2, 'panel').setVisible(false).setScrollFactor(0).setDepth(20);
-        this.daveimage = scene.add.sprite(WIDTH/2, HEIGHT/2 - 175, 'davemotions').setVisible(false).setScrollFactor(0).setScale(2).setFrame(2).setDepth(21);
-        this.score1 = scene.add.image(WIDTH/2 - 275, HEIGHT/2 + 325, 'sign').setVisible(false).setScrollFactor(0).setDepth(22);
-        this.score2 = scene.add.image(WIDTH/2, HEIGHT/2 + 325, 'sign').setVisible(false).setScrollFactor(0).setDepth(22);
-        this.score3 = scene.add.image(WIDTH/2 + 275, HEIGHT/2 + 325, 'sign').setVisible(false).setScrollFactor(0).setDepth(22);
-        this.tryAgain = scene.add.text(WIDTH/2, HEIGHT-100, (IS_MOBILE ? "tap" : "click") + " to dive again", { color: 'red', fontFamily: 'Arial', fontSize: '65px', fontStyle: 'bold'}).setOrigin(0.5).setDepth(22).setVisible(false);
+        this.baseDepth = depth;
+        this.panel = scene.add.image(WIDTH/2, HEIGHT/2, 'panel').setVisible(false).setScrollFactor(0).setDepth(this.baseDepth);
+        this.daveimage = scene.add.sprite(WIDTH/2, HEIGHT/2 - 175, 'davemotions').setVisible(false).setScrollFactor(0).setScale(2).setFrame(2).setDepth(this.baseDepth + 1);
+        this.score1 = scene.add.image(WIDTH/2 - 275, HEIGHT/2 + 325, 'sign').setVisible(false).setScrollFactor(0).setDepth(this.baseDepth + 2);
+        this.score2 = scene.add.image(WIDTH/2, HEIGHT/2 + 325, 'sign').setVisible(false).setScrollFactor(0).setDepth(this.baseDepth + 2);
+        this.score3 = scene.add.image(WIDTH/2 + 275, HEIGHT/2 + 325, 'sign').setVisible(false).setScrollFactor(0).setDepth(this.baseDepth + 2);
+        this.tryAgain = scene.add.bitmapText(125, 75, 'red-arial', (IS_MOBILE ? 'tap' : 'click') + ' to dive again', 65).setOrigin(0.5).setDepth(this.baseDepth + 2).setScrollFactor(0).setVisible(false);
     }
 
     display(scene, result, strings, frame, scores, sceneHeight) {
-        let height = HEIGHT/2;
-        scene.add.text(WIDTH/2, height - 375, result, { align: 'center', color: result === 'FAILED DIVE' ? 'red' : 'green', fontFamily: 'Arial', fontSize: '80px', fontStyle: 'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(21);
+        let height = HEIGHT/2 + 5;
+        scene.add.bitmapText(WIDTH/2, height - 375, ((result === 'FAILED DIVE') || (result === 'GAME OVER')) ? 'red-arial' : 'green-arial', result, 80).setOrigin(0.5).setDepth(this.baseDepth + 1).setScrollFactor(0);
         strings.forEach(string => {
-            scene.add.text(WIDTH/2, height, string, { align: 'center', color: (string.includes('rotations') && result === 'FAILED DIVE') ? 'red': 'white', fontFamily: 'Arial', fontSize: '64px', fontStyle: 'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(21);
+            scene.add.bitmapText(WIDTH/2, height, (string.includes('rotations') && ((result === 'FAILED DIVE') || (result === 'GAME OVER'))) ? 'red-arial' : 'black-arial', string, 80).setOrigin(0.5).setDepth(this.baseDepth + 1).setScrollFactor(0);
             height += 75;
         });
         let width = WIDTH/2 - 275;
-        scores.forEach(score => {
-            scene.add.text(width, HEIGHT/2 + 325, score, { align: 'center', color: 'red', fontFamily: 'Arial', fontSize: '100px', fontStyle: 'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(23);
+        scores ? scores.forEach(score => {
+            scene.add.bitmapText(width, HEIGHT/2 + 325, 'red-arial', score, 100).setOrigin(0.5).setDepth(this.baseDepth + 3).setScrollFactor(0);
             width += 275;
-        })
+        }) : null;
         this.tryAgain.setPosition(WIDTH/2, sceneHeight - 100);
-        this.tryAgain.setVisible(true);
+        this.tryAgain.setVisible(scores ? true : false);
         this.panel.setVisible(true);
         this.daveimage.setFrame(frame);
         this.daveimage.setVisible(true);
-        this.score1.setVisible(true);
-        this.score2.setVisible(true);
-        this.score3.setVisible(true);
+        this.score1.setVisible(scores ? true : false);
+        this.score2.setVisible(scores ? true : false);
+        this.score3.setVisible(scores ? true : false);
     }
 
     close() {
@@ -156,6 +210,60 @@ class InfoPanel extends Phaser.GameObjects.Group {
         this.score1.setVisible(false);
         this.score2.setVisible(true);
         this.score3.setVisible(true);
+    }
+}
+
+class MobileControls {
+    constructor(scene) {
+        this.leftButton = scene.add.existing(new ControlButton(scene, 175, HEIGHT - 150, 'controls-left'));
+        this.rightButton = scene.add.existing(new ControlButton(scene, 450, HEIGHT - 150, 'controls-right'));
+        this.jumpButton = scene.add.existing(new ControlButton(scene, WIDTH - 175, HEIGHT - 150, 'controls-jump'));
+        this.flipButton = scene.add.existing(new ControlButton(scene, WIDTH - 175, HEIGHT - 150, 'controls-flip'));
+        this.flipButton.setVisible(false);
+    }
+
+    setVisible(visible) {
+        this.leftButton.setVisible(visible);
+        this.rightButton.setVisible(visible);
+        this.jumpButton.setVisible(visible);
+        this.flipButton.setVisible(visible);
+    }
+
+    jumpControls() {
+        this.jumpButton.setVisible(true);
+        this.flipButton.setVisible(false);
+    }
+
+    flipControls() {
+        this.flipButton.setVisible(true);
+        this.jumpButton.setVisible(false);
+    }
+}
+
+class ControlButton extends Phaser.GameObjects.Image
+{
+    constructor(scene, x, y, texture, frame = null)
+    {
+        super(scene, x, y, texture, frame);
+
+        this.setInteractive();
+        this.setScrollFactor(0)
+        this.setScale(0.5);
+        this.setDepth(14);
+        this.isDown = false;
+
+        this.onPressed = null;
+        this.onReleased = null;
+
+        this.on('pointerdown', () => { this.isDown = true; });
+        this.on('pointerup', () => { this.pointerUp(); });
+        this.on('pointerout', () => { this.pointerUp(); });
+    }
+
+    pointerUp()
+    {
+        this.isDown = false;
+        if(this.onReleased != null) this.onReleased();
     }
 }
 
@@ -189,7 +297,14 @@ class DiveScene extends Phaser.Scene {
         this.load.image('platformtop', 'assets/platformtop.png');
         this.load.image('platformsection', 'assets/platformsection.png');
         this.load.image('platformbase', 'assets/platformbase.png');
-        this.load.image('sign', 'assets/sign.png');
+        this.load.image('controls-right', 'assets/controls-right.png');
+        this.load.image('controls-left', 'assets/controls-left.png');
+        this.load.image('controls-flip', 'assets/controls-flip.png');
+        this.load.image('controls-jump', 'assets/controls-jump.png');
+        this.load.bitmapFont('Arial', 'assets/fonts/Arial20.png', 'assets/fonts/Arial20.xml');
+        this.load.bitmapFont('green-arial', 'assets/fonts/green-arial.png', 'assets/fonts/green-arial.xml');
+        this.load.bitmapFont('yellow-arial', 'assets/fonts/yellow-arial.png', 'assets/fonts/yellow-arial.xml');
+        this.load.bitmapFont('red-arial', 'assets/fonts/red-arial.png', 'assets/fonts/red-arial.xml');
         this.load.spritesheet('springboard', 'assets/board.png', { frameWidth: 440, frameHeight: 64, margin: 0, spacing: 0 });
         this.load.spritesheet('water', 'assets/water.png', { frameWidth: 1250, frameHeight: 200, margin: 0, spacing: 0 });
         this.load.spritesheet('dave', 'assets/divedave-spritesheet-extruded.png', { frameWidth: 256, frameHeight: 256, margin: 1, spacing: 2 });
@@ -211,27 +326,27 @@ class DiveScene extends Phaser.Scene {
         this.spawnClouds();
 
         this.add.image(125, 110, 'sign').setRotation(Math.PI).setDepth(14).setScrollFactor(0);
-        this.runningStreak = this.add.text(125, 135, "streak: " + streak, { color: 'grey', fontFamily: 'Arial', fontSize: '30px', fontStyle: 'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(14).setActive(false);
-        this.runningScore = this.add.text(125, 75, "score: " + totalScore, { color: 'grey', fontFamily: 'Arial', fontSize: '30px', fontStyle: 'bold'}).setOrigin(0.5).setScrollFactor(0).setDepth(14).setActive(false);
+        this.runningStreak = this.add.bitmapText(125, 135, 'black-arial', "streak: " + streak, 30).setOrigin(0.5).setScrollFactor(0).setDepth(14).setActive(false);
+        this.runningScore = this.add.bitmapText(125, 75, 'black-arial', "score: " + totalScore, 30).setOrigin(0.5).setScrollFactor(0).setDepth(14).setActive(false);
         this.calculateGameLogic();
     
         waterLevel = this.sceneHeight - 100;
         let heightFromWater = waterLevel - 797;
-        this.add.text(WIDTH - 225, 797 - 10, "   " + Math.round(heightFromWater/2/100 * 10) / 10 + "m", { color: 'black', fontFamily: 'Arial', fontSize: '50px', fontStyle: 'bold'});
+        this.add.bitmapText(WIDTH - 200, 797 - 10, 'black-arial', "   " + Math.round(heightFromWater/2/100 * 10) / 10 + "m", 50).setDepth(14).setActive(false);
         heightFromWater--;
         for (let i = 798; i < waterLevel; i++) {
-            let labelColor = 'red';
+            let labelColor = 'red-arial';
             let currHeight = heightFromWater/2/100;
             if (currHeight < 25) {
-                labelColor = 'yellow';
+                labelColor = 'yellow-arial';
             }
             if (currHeight < 10) {
-                labelColor = 'green'
+                labelColor = 'green-arial'
             }
             if ( heightFromWater%200 === 0 ) {
-                this.add.text(WIDTH - 250, i, "-- " + currHeight, { color: labelColor, fontFamily: 'Arial', fontSize: '32px', fontStyle: 'bold'}).setDepth(14).setActive(false);
+                this.add.bitmapText(WIDTH - 250, i, labelColor, "-- " + currHeight, 32).setDepth(14).setActive(false);
             } else if ( heightFromWater%20 === 0 ) {
-                this.add.text(WIDTH - 250, i, "-", { color: labelColor, fontFamily: 'Arial', fontSize: '32px', fontStyle: 'bold'}).setDepth(14).setActive(false);
+                this.add.bitmapText(WIDTH - 250, i, labelColor, "-", 32).setDepth(14).setActive(false);
             }
             heightFromWater--;
         }
@@ -250,7 +365,13 @@ class DiveScene extends Phaser.Scene {
         dave.body.setAllowDrag(true);
         jumping = false;
 
-        this.info = new InfoPanel(this);
+        this.info = new InfoPanel(this, 20);
+        this.highScorePanel = new InfoPanel(this, 24);
+        this.highScoreText = this.add.bitmapText(WIDTH/2, 150, 'green-arial', 'NEW HIGH SCORE!', 50).setOrigin(0.5).setScrollFactor(0).setDepth(24).setActive(false).setVisible(false);
+        this.mobileControls = new MobileControls(this);
+        if (!IS_MOBILE) {
+            this.mobileControls.setVisible(false);
+        }
 
         this.anims.create({
             key: 'idle', 
@@ -338,6 +459,7 @@ class DiveScene extends Phaser.Scene {
             space: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE, false),
             enter: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER, false),
             r: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R, false),
+            cursors: this.input.keyboard.createCursorKeys(),
         };
 
         this.input.on('pointerdown', () => {
@@ -348,12 +470,17 @@ class DiveScene extends Phaser.Scene {
             jumpReleasedAt = Date.now();
         });
 
-        this.input.on('pointerup', () => {
+        controls.cursors.up.on('up', () => {
             jumpReleasedAt = Date.now();
         })
 
+        this.input.on('pointerup', () => {
+            jumpReleasedAt = Date.now();
+        });
+
         tucked = false;
         tuckCount = 0;
+        this.lastFlipNumber = 0;
     }
 
     calculateBoost() {
@@ -482,13 +609,14 @@ class DiveScene extends Phaser.Scene {
                     scores: [0, 0, 0]
                 }
                 let result = this.scoreDive();
-                this.runningStreak.setText("streak: " + streak)
-                this.runningScore.setText("score: " + totalScore)
+                this.runningStreak.setText("streak: " + streak);
+                this.runningScore.setText("score: " + totalScore);
                 this.info.display(this, result, [
                     "height: " + this.stats.height + "m",
                     "entry angle: " + this.stats.angle, 
                     "rotations: " + this.stats.rotations
                 ], this.stats.emotionFrame, this.stats.scores, this.sceneHeight);
+                this.mobileControls.setVisible(false);
                 let splash = this.add.sprite(dave.x, waterLevel - 100, 'splash');
                 splash.setDepth(14);
                 splash.anims.play('splash');
@@ -507,7 +635,7 @@ class DiveScene extends Phaser.Scene {
         let time = Math.sqrt(2 * (this.sceneHeight - 250) / GRAVITY);
         let maxFlips = time * (MAX_SPIN_VELOCITY/360);
         this.goalRotations = (getRandomInt(1, maxFlips*2)/2.0);
-        this.add.text(WIDTH - 25, 25, "GOAL: " + this.goalRotations + (this.goalRotations < 1.5 ? " FLIP" : " FLIPS"), { color: '#4CBB17', fontFamily: 'Arial', fontSize: '65px', fontStyle: 'bold'}).setOrigin(1,0).setScrollFactor(0).setDepth(14).setActive(false);
+        this.add.bitmapText(WIDTH - 25, 25, 'green-arial', "GOAL: " + this.goalRotations + (this.goalRotations < 1.5 ? " FLIP" : " FLIPS"), 65).setOrigin(1,0).setScrollFactor(0).setDepth(14).setActive(false);
     }
 
     countRotations() {
@@ -526,6 +654,14 @@ class DiveScene extends Phaser.Scene {
             this.totalRotations = this.sumRotation / (2 * Math.PI);
             this.previousAngle = this.currentAngle;
             this.currentAngle = daveRotation;
+            if (this.totalRotations > this.lastFlipNumber) {
+                let diff = this.totalRotations - this.lastFlipNumber;
+                if (diff >= 1) {
+                    let roundedRotations = Math.round(this.totalRotations);
+                    this.add.bitmapText(dave.x, dave.y, roundedRotations > this.goalRotations ? 'red-arial' : 'green-arial', roundedRotations, 75).setDepth(14).setActive(false);
+                    this.lastFlipNumber = roundedRotations;
+                }
+            }
         }
     }
 
@@ -572,41 +708,68 @@ class DiveScene extends Phaser.Scene {
             }
             streak++;
             totalScore = totalScore + this.stats.scores[0] + this.stats.scores[1] + this.stats.scores[2];
+            if (CHALLENGE_MODE && totalScore > highScore) {
+                cookieManager.createCookie(HIGH_SCORE_COOKIE, totalScore, 400);
+                highScore = totalScore;
+                highScoreSession = true;
+                this.highScoreText.setVisible(true);
+                setTimeout( () => {
+                    this.highScoreText.setVisible(false);
+                }, 5000);
+            }
             return 'SUCCESS';
         } else {
             this.stats.emotionFrame = 0;
             this.stats.scores.forEach( (score, index, scores) => {
                 scores[index] = 0;
             });
+            if (highScoreSession) {
+                this.highScorePanel.display(this, 'GAME OVER', [
+                        '',
+                        'NEW HIGH SCORE: ' + totalScore,
+                        '',
+                        'final height: ' + this.stats.height + "m",
+                        'streak: ' + streak + ' dives',
+                    ], 3, null, HEIGHT/2);
+            }
             streak = 0;
             totalScore = 0;
-            avgScore = 0;
             return 'FAILED DIVE'
         }
     }
 
     resetScene() {
         if (this.diveComplete && this.readyForReset) {
-            this.scene.restart({ height: getRandomInt(1500, 10000) }); 
+            if (!CHALLENGE_MODE) {
+                this.scene.restart({ height: getRandomInt(1500, 10000) }); 
+            } else {
+                if (totalScore === 0) {
+                    this.scene.restart({ height: 1500 });
+                } else {
+                    let streakMultiplier = 1+((2*streak)/((2*streak)+100));
+                    let newSceneHeight = this.sceneHeight += getRandomInt(0, 500);
+                    this.scene.restart({ height: Math.round(newSceneHeight * streakMultiplier) });
+                }
+            }
         }
     }
     
     playerMovementHandler() {
-        if (controls.enter.isDown && this.diveComplete) {
+        if (controls.enter.isDown || controls.space.isDown && this.diveComplete) {
             this.resetScene();
         }
-        if ((controls.up.isDown || controls.space.isDown)) {
+        if ((controls.up.isDown || controls.space.isDown || controls.cursors.up.isDown)) {
             if (this.daveIsAboveBoard() && this.daveIsTouchingBoard()) {
                 this.daveJump();
             }
         } 
-        if (controls.left.isDown) {
+        if (controls.left.isDown || controls.cursors.left.isDown) {
             dave.setVelocityX(-dave.speed);
         }
-        if (controls.right.isDown) {
+        if (controls.right.isDown || controls.cursors.right.isDown) {
             dave.setVelocityX(dave.speed);
         }
-        if ( (controls.r.isDown)) {
+        if ( controls.r.isDown || controls.space.isDown || controls.cursors.up.isDown) {
             if (!this.daveIsAboveBoard()) {
                 if (!this.daveIsTucked()) {
                     tucked = true;
@@ -617,36 +780,37 @@ class DiveScene extends Phaser.Scene {
                 } else if (currentVelocity < MAX_SPIN_VELOCITY) {
                     currentVelocity+=1;
                 }
-                if (controls.r.isDown) {
-                    dave.body.setAngularVelocity(currentVelocity);
-                }
+                dave.body.setAngularVelocity(currentVelocity);
             }
         } else {
             tucked = false;
             currentVelocity = MIN_SPIN_VELOCITY;
         }
     }
-    
+
     playerMobileMovementHandler() {
-        var pointer = this.input.activePointer;
-        if ((pointer.isDown)) {
-            var touchX = pointer.x;
-            var touchY = pointer.y;
-            var touchWorldPoint = this.cameras.main.getWorldPoint(touchX, touchY);
+        if (!this.diveComplete) {
+            if (this.daveIsAboveBoard()) {
+                this.mobileControls.jumpControls();
+            } else {
+                this.mobileControls.flipControls();
+            }
+        }
+        if (this.mobileControls.leftButton.isDown || this.mobileControls.rightButton.isDown || this.mobileControls.jumpButton.isDown || this.mobileControls.flipButton.isDown) {
             if (this.diveComplete) {
                 this.resetScene();
             } else {
                 if (this.daveIsAboveBoard()) {
-                    if (touchWorldPoint.y < dave.y && this.daveIsTouchingBoard()) {
+                    if (this.mobileControls.jumpButton.isDown && this.daveIsTouchingBoard()) {
                         this.daveJump();
-                    } else {
-                        if (touchWorldPoint.x < dave.x - dave.width/2) {
-                            dave.setVelocityX(-dave.speed);
-                        } else if (touchWorldPoint.x > dave.x + dave.width/2) {
-                            dave.setVelocityX(dave.speed);
-                        }
                     }
-                } else {
+                    if (this.mobileControls.leftButton.isDown) {
+                        dave.setVelocityX(-dave.speed);
+                    }
+                    if (this.mobileControls.rightButton.isDown) {
+                        dave.setVelocityX(dave.speed);
+                    }
+                } else if (this.mobileControls.flipButton.isDown) {
                     if (!this.daveIsTucked()) {
                         tucked = true;
                         tuckCount++;
@@ -661,8 +825,8 @@ class DiveScene extends Phaser.Scene {
                 }
             }
         } else {
-            tucked = false;
-            currentVelocity = MIN_SPIN_VELOCITY;
+                tucked = false;
+                currentVelocity = MIN_SPIN_VELOCITY;
         }
     }
 
@@ -743,6 +907,9 @@ var config = {
             gravity: { y: GRAVITY },
             debug: false
         }
+    },
+    input :{
+        activePointers:3,
     },
     dom: {
 		createContainer: true

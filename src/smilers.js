@@ -1,7 +1,3 @@
-var images = new Array();
-var galleryLoaded = false;
-const event = new Event('imagesFetched');
-
 const GAME = {
     SIZE: 512
 }
@@ -338,7 +334,6 @@ class DrawvidDotCom extends Phaser.Scene {
     }
 
     preload() {
-        this.loadArtImages();
         this.load.image('bg', 'assets/bg.png');
         this.load.image('ground', 'assets/ground.png');
         this.load.image('button', 'assets/button.png');
@@ -427,28 +422,6 @@ class DrawvidDotCom extends Phaser.Scene {
 
         this.aboutPopup = new PopUp(this);
         this.aboutPopup.setTextColor("#000000");
-        this.artPopup = new PopUp(this);
-        this.artPopup.setTextColor("#0000FF");
-        this.artPopup.addButton(this);
-        this.artPopup.setButtonCallback(() => {
-            this.currentGalleryIndex = getRandomInt(0, images.length-1);
-            this.img = new Image();
-            this.img.src = images[this.currentGalleryIndex].src;
-            this.img.onload = () => {
-                this.fitImageInBox(this.img, GAME.SIZE*2/5);
-                this.image ? this.image.destroy() : null;
-                this.image = this.add.dom(GAME.SIZE/2, GAME.SIZE/2 - PLAYER_SIZE*3, this.img);
-                this.artPopup.display(images[this.currentGalleryIndex].title);            }
-        })
-        this.artPopup.setTextLocation(GAME.SIZE/2, GAME.SIZE/2 + PLAYER_SIZE* (GLOBAL_SCALE));
-        this.artPopup.onTextClick(() => {
-            window.open(images[this.currentGalleryIndex].src);
-        });
-        this.artPopup.onClose(() => {
-            if (this.image) {
-                this.image.destroy();
-            }
-        });
     }
 
     addButtons() {
@@ -471,29 +444,12 @@ class DrawvidDotCom extends Phaser.Scene {
         art.setScale(GLOBAL_SCALE);
         art.on('pointerdown', () => {
             window.location.href = "/shop";
-            // if (!this.artPopup.displayed) {
-            //     this.artPopUp();
-            // }
         });
         art.setDepth(11);
     }
 
     aboutPopUp() {
         this.aboutPopup.display("david🤫 a.k.a. drawvid😈  art🎨 + computer software💾  @drawvid👨‍💻 on instagram📸 twitter🐦 and giphy🕺 this site🏡 was built🛠️ using 👽Phaser.js🚀");
-    }
-
-    artPopUp() {
-        if (galleryLoaded) {
-            this.currentGalleryIndex = getRandomInt(0, images.length-1);
-            this.img = new Image();
-            this.img.src = images[this.currentGalleryIndex].src;
-            this.img.onload = () => {
-                this.fitImageInBox(this.img, GAME.SIZE*2/5);
-                this.image ? this.image.destroy() : null;
-                this.image = this.add.dom(GAME.SIZE/2, GAME.SIZE/2 - PLAYER_SIZE*3, this.img);
-                this.artPopup.display(images[this.currentGalleryIndex].title);
-            }
-        }
     }
 
     fitImageInBox(img, boxSize) {
@@ -657,31 +613,6 @@ class DrawvidDotCom extends Phaser.Scene {
             }
         }
     }
-
-    async loadArtImages() {
-        var albumPhotosKey = encodeURIComponent("png") + '/';
-        let s3Objects;
-        try {
-            s3Objects = await s3.listObjects({Prefix: albumPhotosKey}).promise();
-            s3Objects.Contents.forEach((photo, index) => {
-                var photoKey = photo.Key;
-                var photoUrl = s3Objects["$response"].request.httpRequest.endpoint.href + s3Objects["$response"].request.httpRequest.virtualHostedBucket + "/" + encodeURIComponent(photoKey);
-                images.push({
-                    src: photoUrl,
-                    title: photoKey.split('/')[1]
-                });
-                if (images.length >= s3Objects.Contents.length-1) {
-                    galleryLoaded = true;
-                }
-            });
-        } catch (e) {
-            return alert('there was an an error retrieving some things from the server :( ' + e.message);
-        }
-    }
-}
-
-function shuffleGallery() {
-    shuffleArray(images);
 }
 
 function shuffleArray(array) {

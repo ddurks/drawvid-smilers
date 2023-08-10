@@ -7,6 +7,7 @@
     <style>
         body {
             background-color: #639BFF;
+            margin: 0;
         }
 
         #phaser-div {
@@ -29,30 +30,7 @@
         }
     </style>
     <link rel='icon', href='/assets/favicon.ico'>
-    <script src="//cdn.jsdelivr.net/npm/phaser@3.51.0/dist/phaser.js"></script>
-    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.766.0.min.js"></script>
-    <script>
-      // **DO THIS**:
-      //   Replace BUCKET_NAME with the bucket name.
-      //
-      var albumBucketName = 'drawvid-art';
-
-      // **DO THIS**:
-      //   Replace this block of code with the sample code located at:
-      //   Cognito -- Manage Identity Pools -- [identity_pool_name] -- Sample Code -- JavaScript
-      //
-      // Initialize the Amazon Cognito credentials provider
-      AWS.config.region = 'ca-central-1'; // Region
-      AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-          IdentityPoolId: 'ca-central-1:3576ba6e-65ef-45a6-b3e8-1aad09b685c3',
-      });
-
-      // Create a new service object
-      var s3 = new AWS.S3({
-        apiVersion: '2006-03-01',
-        params: {Bucket: albumBucketName}
-      });
-    </script>
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js"></script>
     <script src="/src/smilers.js"></script>
 </head>
 <body>
