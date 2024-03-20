@@ -377,7 +377,7 @@ class DrawvidDotCom extends Phaser.Scene {
     this.load.image("button", "assets/button.png");
     this.load.image("code", "assets/code-button.png");
     this.load.image("about", "assets/about-button.png");
-    this.load.image("art", "assets/shop-button.png");
+    this.load.image("paradise", "assets/paradise-button.png");
     this.load.image("home", "assets/home-button.png");
     this.load.image("logo", "assets/drawvid-logo.png");
     this.load.image("popup", "assets/popup.png");
@@ -532,7 +532,7 @@ class DrawvidDotCom extends Phaser.Scene {
 
   addButtons() {
     let code = this.physics.add
-      .image(GAME.SIZE / 3, GAME.SIZE / 3, "code")
+      .image(GAME.SIZE / 4, GAME.SIZE / 3, "code")
       .setInteractive();
     code.body.setAllowGravity(false);
     code.setScale(GLOBAL_SCALE);
@@ -540,8 +540,17 @@ class DrawvidDotCom extends Phaser.Scene {
       window.location.href = "/code";
     });
     code.setDepth(11);
+    let paradise = this.physics.add
+      .image((2 * GAME.SIZE) / 4, GAME.SIZE / 3, "paradise")
+      .setInteractive();
+    paradise.body.setAllowGravity(false);
+    paradise.setScale(GLOBAL_SCALE);
+    paradise.on("pointerdown", () => {
+      window.location.href = "http://postinparadise.com";
+    });
+    paradise.setDepth(11);
     let about = this.physics.add
-      .image((2 * GAME.SIZE) / 3, GAME.SIZE / 3, "about")
+      .image((3 * GAME.SIZE) / 4, GAME.SIZE / 3, "about")
       .setInteractive();
     about.body.setAllowGravity(false);
     about.setScale(GLOBAL_SCALE);
