@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>drawvid gallery</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div id="toggleControl" style="position: fixed; right: 10px; top: 10px; z-index: 100;">
+      <button id="toggleView">Toggle 2D/3D</button>
+    </div>
+    <img id="displayImage" src="./assets/display.png" alt="Gallery Display" class="full-screen-image">
+    <img id="topImage" alt="Gallery Image" class="top-image">
+    <div id="galleryContainer">
+      <div id="galleryHeader">
+        <img id="galleryHeaderImg" src="assets/drawvidcom.png">
+      </div>
+      <div id="imageContainer" class="flex-container"></div>
+    </div>
+    <canvas id="threeCanvas"></canvas>
+    <h2 id="controls"></h2>
+    <img id="loading" src="assets/loading.gif">
+    <div id="joystickWrapper1"></div>
+    <div id="joystickWrapper2">
+        <div id="jumpButton">
+            <p>JUMP</p>
+        </div>
+    </div>
+    <div id="slider">
+      <h2>size:   </h2>
+      <input type="range" id="sizeSlider">
+    </div>
+    <!-- Import maps polyfill -->
+    <!-- Remove this when import maps will be widely supported -->
+    <script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.139.0/build/three.module.js",
+                "cannon": "./lib/cannon-es.js"
+            }
+        }
+    </script>
+    <script type="text/javascript" src="./lib/nipplejs.js"></script>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.800.0.min.js"></script>
+    <script type="module" src="index.js"></script>
+  </body>
+</html>

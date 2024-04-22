@@ -1,0 +1,199 @@
+html, body {
+    margin: 0;
+    height: 100%;
+
+    background-image: url('./assets/marble.png'); /* Path to your background image */
+    background-position: center; /* Centers the background image */
+    background-size: cover; /* Cover the entire viewport without stretching */
+    background-attachment: fixed; /* Optional: Keeps the background image fixed during scrolling */
+    background-repeat: no-repeat;
+}
+#loading {
+    width: 100%;
+    display: block;
+    position: absolute;
+    top: 40%;
+}
+#threeContainer {
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+
+#galleryContainer {
+    width: 100%;
+    display: none;
+}
+
+#galleryHeader img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.flex-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+}
+.flex-item {
+    position: relative;
+    display: flex;
+    margin: 10px;
+    width: 200px;
+    height: 200px;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.flex-display, .flex-img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.flex-display {
+    z-index: 15;
+}
+
+.flex-img {
+    top: 43%;
+    width: 60%;
+    height: 50%;
+    object-fit: contain;
+    z-index: 16;
+}
+
+#controls {
+    position: absolute;
+    top: 0;
+    left: 10px;
+    z-index:100;
+}
+
+#joystickWrapper1 {
+    pointer-events: auto;
+    display: block;
+    position: absolute;
+    bottom: 15%;
+    left:0;
+    right:0;
+    margin-left:auto;
+    margin-right:auto;
+    background-color: transparent;
+    width: 120px;
+    height: 120px;
+    z-index: 12;
+    touch-action: manipulation;
+}
+
+#joystickWrapper2 {
+    pointer-events: auto;
+    display: block;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    left: auto;
+    background-color: transparent;
+    width: 50vw;
+    height: 140px;
+    z-index: 12;
+    touch-action: manipulation;
+    display: none;
+}
+
+.full-screen-image {
+    position: fixed;
+    display: none;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-height: 100%;
+    max-width: 100%;
+    height: 80vh;
+    width: auto;
+    z-index: 15;
+}
+.top-image {
+    display:none;
+    position: fixed;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+    max-width: 50vh;
+    max-height: 50vh;
+}
+
+#slider {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    width: 25vw;
+    z-index: 20;
+    display: none;
+}
+
+/* General styles for the slider */
+input[type="range"] {
+    -webkit-appearance: none; /* Overrides default appearance */
+    width: 100%; /* Full-width slider */
+    background: transparent; /* Removes default background */
+    cursor: pointer;
+}
+
+/* Styling the track (part the thumb slides along) */
+input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 8px;
+    background: #000; /* Black track */
+    border-radius: 4px;
+}
+
+input[type="range"]::-moz-range-track {
+    width: 100%;
+    height: 8px;
+    background: #000; /* Black track */
+    border-radius: 4px;
+}
+
+input[type="range"]::-ms-track {
+    width: 100%;
+    height: 8px;
+    background: #000; /* Black track */
+    border-radius: 4px;
+}
+
+/* Styling the thumb (the part you drag) */
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; /* Removes default styles */
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #fff; /* White thumb */
+    border-radius: 50%; /* Circle shape */
+    border: none; /* No border */
+    margin-top: -6px; /* Centers the thumb on the track */
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #fff; /* White thumb */
+    border-radius: 50%;
+    border: none;
+}
+
+input[type="range"]::-ms-thumb {
+    width: 20px;
+    height: 20px;
+    background: #fff; /* White thumb */
+    border-radius: 50%;
+    border: none;
+}
