@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.139.0/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.139.0/examples/jsm/controls/OrbitControls.js";
-import * as CANNON from 'cannon';
+import * as CANNON from "cannon";
 
 var IS_MOBILE;
 if (
@@ -21,32 +21,32 @@ document.getElementById("controls").innerHTML = IS_MOBILE
   : "[W] [A] [S] [D] - move  [scroll wheel] - zoom  [click + drag] - camera";
 
 AWS.config.update({
-  region: 'ca-central-1',
+  region: "ca-central-1",
   credentials: new AWS.CognitoIdentityCredentials({
-    IdentityPoolId: 'ca-central-1:afdb4202-24ce-4f95-a22a-dabdfef7a379',
+    IdentityPoolId: "ca-central-1:afdb4202-24ce-4f95-a22a-dabdfef7a379",
   }),
 });
 const s3 = new AWS.S3();
 
-let currentView = '3D'; // Start with 2D view
+let currentView = "3D"; // Start with 2D view
 
-document.addEventListener('DOMContentLoaded', function() {
-  const toggleButton = document.getElementById('toggleView');
-  toggleButton.addEventListener('click', toggleView);
+document.addEventListener("DOMContentLoaded", function () {
+  const toggleButton = document.getElementById("toggleView");
+  toggleButton.addEventListener("click", toggleView);
 
-  const slider = document.getElementById('sizeSlider');
+  const slider = document.getElementById("sizeSlider");
   setSliderAttributes(slider);
-  slider.addEventListener('input', function() {
-      adjustImageSize(this.value);
+  slider.addEventListener("input", function () {
+    adjustImageSize(this.value);
   });
 
-  const headerImg = document.getElementById('galleryHeaderImg');
-  headerImg.onload = function() {
-      adjustImagePosition(this);
+  const headerImg = document.getElementById("galleryHeaderImg");
+  headerImg.onload = function () {
+    adjustImagePosition(this);
   };
 
   if (headerImg.complete) {
-      adjustImagePosition(headerImg);
+    adjustImagePosition(headerImg);
   }
 });
 
@@ -55,67 +55,70 @@ function adjustImagePosition(img) {
   const imgHeight = img.offsetHeight;
 
   if (imgHeight > viewportHeight * 0.5) {
-      img.style.position = 'relative';
-      img.style.top = '-50%';
+    img.style.position = "relative";
+    img.style.top = "-50%";
   }
 }
 
 function setSliderAttributes(slider) {
   const screenWidth = window.innerWidth;
-  if (screenWidth <= 480) { // Mobile devices
-      slider.min = 50;
-      slider.max = 200;
-      slider.value = 100;
-  } else if (screenWidth <= 1024) { // Tablets
-      slider.min = 100;
-      slider.max = 300;
-      slider.value = 200;
-  } else { // Desktops
-      slider.min = 150;
-      slider.max = 500;
-      slider.value = 300;
+  if (screenWidth <= 480) {
+    // Mobile devices
+    slider.min = 50;
+    slider.max = 200;
+    slider.value = 100;
+  } else if (screenWidth <= 1024) {
+    // Tablets
+    slider.min = 100;
+    slider.max = 300;
+    slider.value = 200;
+  } else {
+    // Desktops
+    slider.min = 150;
+    slider.max = 500;
+    slider.value = 300;
   }
   adjustImageSize(slider.value);
 
   // Optional: Update dynamically on window resize
-  window.addEventListener('resize', () => {
-      setSliderAttributes(slider);
+  window.addEventListener("resize", () => {
+    setSliderAttributes(slider);
   });
 }
 
 function adjustImageSize(value) {
-  const items = document.querySelectorAll('.flex-item');
-  items.forEach(item => {
-      item.style.width = `${value}px`;
-      item.style.height = `${value}px`;
+  const items = document.querySelectorAll(".flex-item");
+  items.forEach((item) => {
+    item.style.width = `${value}px`;
+    item.style.height = `${value}px`;
   });
 }
 
 function toggleView() {
-  const threeContainer = document.getElementById('threeCanvas');
-  const galleryContainer = document.getElementById('galleryContainer');
-  const slider = document.getElementById('slider');
+  const threeContainer = document.getElementById("threeCanvas");
+  const galleryContainer = document.getElementById("galleryContainer");
+  const slider = document.getElementById("slider");
   const body = document.body;
   const controls = document.getElementById("controls");
 
-  if (currentView === '2D') {
-      threeContainer.style.display = 'block';
-      galleryContainer.style.display = 'none';
-      slider.style.display = 'none';
-      body.style.overflow = 'hidden';
-      currentView = '3D';
-      controls.innerHTML = IS_MOBILE
-        ? "[joystick] - move  [pinch and swipe] - camera"
-        : "[W] [A] [S] [D] - move  [scroll wheel] - zoom  [click + drag] - camera";
-      simulating = true;
+  if (currentView === "2D") {
+    threeContainer.style.display = "block";
+    galleryContainer.style.display = "none";
+    slider.style.display = "none";
+    body.style.overflow = "hidden";
+    currentView = "3D";
+    controls.innerHTML = IS_MOBILE
+      ? "[joystick] - move  [pinch and swipe] - camera"
+      : "[W] [A] [S] [D] - move  [scroll wheel] - zoom  [click + drag] - camera";
+    simulating = true;
   } else {
-      threeContainer.style.display = 'none';
-      galleryContainer.style.display = 'block';
-      slider.style.display = 'flex';
-      body.style.overflow = 'auto';
-      currentView = '2D';
-      controls.innerHTML = ""
-      simulating = false;
+    threeContainer.style.display = "none";
+    galleryContainer.style.display = "block";
+    slider.style.display = "flex";
+    body.style.overflow = "auto";
+    currentView = "2D";
+    controls.innerHTML = "";
+    simulating = false;
   }
 }
 
@@ -164,7 +167,7 @@ export class CharacterControls {
     const joystickPressed = JOY_DIRS.some((key) => joyValues[key] > 0);
 
     var play = "idle";
-    if (((!isMobile && directionPressed) || (isMobile && joystickPressed))) {
+    if ((!isMobile && directionPressed) || (isMobile && joystickPressed)) {
       play = "walk";
       if (this.walkStart === null) {
         this.walkStart = Date.now();
@@ -197,7 +200,11 @@ export class CharacterControls {
       this.walkDirection.applyAxisAngle(this.rotateAngle, directionOffset);
 
       // move model & camera
-      body.velocity.set(this.walkDirection.x * this.walkVelocity, 0, this.walkDirection.z * this.walkVelocity);
+      body.velocity.set(
+        this.walkDirection.x * this.walkVelocity,
+        0,
+        this.walkDirection.z * this.walkVelocity
+      );
     } else {
       this.walkStart = null;
       this.walkVelocity = this.defaultWalkVelocity;
@@ -222,7 +229,7 @@ export class CharacterControls {
     if (this.walkStart !== null) {
       var deltat = Date.now() - this.walkStart;
       if (deltat > 2000) {
-        speedMultiplier = (deltat / 2000);
+        speedMultiplier = deltat / 2000;
         if (speedMultiplier > 2) {
           speedMultiplier = 2;
         }
@@ -234,9 +241,17 @@ export class CharacterControls {
 
   updateCameraTarget() {
     // calculate camera movement
-    let moveX = (body.velocity.x > 0 ? 1 : -1) * Math.abs(body.position.x - body.lastPosition.x);
-    let moveZ = (body.velocity.z > 0 ? 1 : -1) * Math.abs(body.position.z - body.lastPosition.z);
-    body.lastPosition = { x: body.position.x, y: body.position.y, z: body.position.z };
+    let moveX =
+      (body.velocity.x > 0 ? 1 : -1) *
+      Math.abs(body.position.x - body.lastPosition.x);
+    let moveZ =
+      (body.velocity.z > 0 ? 1 : -1) *
+      Math.abs(body.position.z - body.lastPosition.z);
+    body.lastPosition = {
+      x: body.position.x,
+      y: body.position.y,
+      z: body.position.z,
+    };
 
     // move camera
     this.camera.position.x += moveX;
@@ -335,13 +350,17 @@ solver.tolerance = 0.1;
 world.solver = new CANNON.SplitSolver(solver);
 // use this to test non-split solver
 // world.solver = solver
-world.gravity.set(0, -20, 0)
+world.gravity.set(0, -20, 0);
 // Create a contact material (friction coefficient = 0.3a)
-var physicsMaterial = new CANNON.Material('physics');
-const physics_physics = new CANNON.ContactMaterial(physicsMaterial, physicsMaterial, {
-  friction: 0.3,
-  restitution: 0.0,
-});
+var physicsMaterial = new CANNON.Material("physics");
+const physics_physics = new CANNON.ContactMaterial(
+  physicsMaterial,
+  physicsMaterial,
+  {
+    friction: 0.3,
+    restitution: 0.0,
+  }
+);
 // We must add the contact materials to the world
 world.addContactMaterial(physics_physics);
 
@@ -355,7 +374,10 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.set(0, 25, 100);
 
 // RENDERER
-const renderer = new THREE.WebGLRenderer({ antialias: true, canvas: document.getElementById('threeCanvas') });
+const renderer = new THREE.WebGLRenderer({
+  antialias: false,
+  canvas: document.getElementById("threeCanvas"),
+});
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.shadowMap.enabled = true;
@@ -378,7 +400,10 @@ generateFloor();
 // LOAD ASSETS and BUILD SCENE
 var gLoader = new GLTFLoader();
 
-var characterControls, guy, animationsMap = new Map(), body;
+var characterControls,
+  guy,
+  animationsMap = new Map(),
+  body;
 gLoader.load("./assets/computer_guy_grey.glb", (gltf) => {
   gltf.scene.traverse(function (object) {
     if (object.isMesh) object.castShadow = true;
@@ -389,18 +414,22 @@ gLoader.load("./assets/computer_guy_grey.glb", (gltf) => {
   scene.add(guy);
   camera.position.add(guy.position);
 
-  const slipperyMaterial = new CANNON.Material('slippery');
+  const slipperyMaterial = new CANNON.Material("slippery");
   slipperyMaterial.friction = 0;
 
   // Player physics body
   const shape = new CANNON.Box(new CANNON.Vec3(1, 1, 1));
   body = new CANNON.Body({
     mass: 1,
-    material: slipperyMaterial
+    material: slipperyMaterial,
   });
   body.addShape(shape);
   body.position.copy(guy.position);
-  body.lastPosition = { x: body.position.x, y: body.position.y, z: body.position.z };
+  body.lastPosition = {
+    x: body.position.x,
+    y: body.position.y,
+    z: body.position.z,
+  };
   body.linearDamping = 0.999;
   world.addBody(body);
 
@@ -408,7 +437,7 @@ gLoader.load("./assets/computer_guy_grey.glb", (gltf) => {
   gltf.animations.forEach((a) => {
     animationsMap.set(a.name, mixer.clipAction(a));
   });
-  animationsMap.get('idle').fadeIn(5).play();
+  animationsMap.get("idle").fadeIn(5).play();
 
   characterControls = new CharacterControls(
     guy,
@@ -434,26 +463,33 @@ gLoader.load("./assets/gallery.glb", (gltf) => {
   gltf.scene.traverse(function (object) {
     if (object.isMesh) object.castShadow = true;
   });
-  room = gltf.scene.getObjectByName( 'room' );
-  display = gltf.scene.getObjectByName( 'display' );
-  columns = gltf.scene.getObjectByName( 'columns' );
-
+  room = gltf.scene.getObjectByName("room");
+  display = gltf.scene.getObjectByName("display");
+  columns = gltf.scene.getObjectByName("columns");
 
   createRoom(0, 0, 0, roomSize, doorWidth, doorHeight); // Central room
   for (let i = -1; i <= 1; i++) {
-      for (let j = -1; j <= 1; j++) {
-          if (i !== 0 || j !== 0) { // Avoid recreating the central room
-              createRoom(i * roomSize, 0, j * roomSize, roomSize, doorWidth, doorHeight);
-          }
+    for (let j = -1; j <= 1; j++) {
+      if (i !== 0 || j !== 0) {
+        // Avoid recreating the central room
+        createRoom(
+          i * roomSize,
+          0,
+          j * roomSize,
+          roomSize,
+          doorWidth,
+          doorHeight
+        );
       }
+    }
   }
 });
 
-const bucketName = 'drawvid-art';
-const imageContainer = document.getElementById('imageContainer');
+const bucketName = "drawvid-art";
+const imageContainer = document.getElementById("imageContainer");
 var allArtData;
 async function loadAllArt() {
-  const prefix = 'png/';
+  const prefix = "png/";
   s3.listObjectsV2({ Bucket: bucketName, Prefix: prefix }, (err, data) => {
     if (err) console.log(err, err.stack);
     else {
@@ -461,11 +497,11 @@ async function loadAllArt() {
       load4ArtPieces(0, 0, 0);
       for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
-            if (i !== 0 || j !== 0) {
-                load4ArtPieces(i * roomSize, 0, j * roomSize);
-            }
+          if (i !== 0 || j !== 0) {
+            load4ArtPieces(i * roomSize, 0, j * roomSize);
+          }
         }
-    }
+      }
     }
   });
 }
@@ -477,10 +513,10 @@ function load4ArtPieces(x, y, z) {
   const halfSize = 11.38;
   const height = y + 4.7;
   const positions = [
-      new THREE.Vector3(x-halfSize, height, z-halfSize),
-      new THREE.Vector3(x+halfSize, height, z-halfSize),
-      new THREE.Vector3(x-halfSize, height, z+halfSize),
-      new THREE.Vector3(x+halfSize, height, z+halfSize)
+    new THREE.Vector3(x - halfSize, height, z - halfSize),
+    new THREE.Vector3(x + halfSize, height, z - halfSize),
+    new THREE.Vector3(x - halfSize, height, z + halfSize),
+    new THREE.Vector3(x + halfSize, height, z + halfSize),
   ];
   Array.from({ length: 4 }, () => {
     let file;
@@ -511,22 +547,22 @@ function load4ArtPieces(x, y, z) {
 }
 
 function addImageTo2DGallery(url) {
-  const div = document.createElement('div');
-  div.className = 'flex-item';
-  const slider = document.getElementById('sizeSlider');
+  const div = document.createElement("div");
+  div.className = "flex-item";
+  const slider = document.getElementById("sizeSlider");
   div.style.width = `${slider.value}px`;
   div.style.height = `${slider.value}px`;
 
-  const disp = document.createElement('img');
-  disp.className = 'flex-display';
+  const disp = document.createElement("img");
+  disp.className = "flex-display";
   disp.src = "./assets/display-nox.png";
   disp.alt = "Display Image";
 
-  const img = document.createElement('img');
-  img.className = 'flex-img';
+  const img = document.createElement("img");
+  img.className = "flex-img";
   img.src = url;
   img.alt = "Gallery Image"; // Always provide alt text for accessibility
-  
+
   div.appendChild(disp);
   div.appendChild(img);
   imageContainer.appendChild(div);
@@ -534,15 +570,18 @@ function addImageTo2DGallery(url) {
 
 function createPlaneWithTexture(textureURL, position, x, y, z) {
   textureLoader.load(textureURL, (texture) => {
-      const geometry = new THREE.PlaneGeometry(5.5, 5.5);
-      const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
-      const plane = new THREE.Mesh(geometry, material);
+    const geometry = new THREE.PlaneGeometry(5.5, 5.5);
+    const material = new THREE.MeshBasicMaterial({
+      map: texture,
+      side: THREE.DoubleSide,
+    });
+    const plane = new THREE.Mesh(geometry, material);
 
-      plane.position.copy(position);
-      plane.lookAt(new THREE.Vector3(x, y + 4.7, z));
-      scene.add(plane);
+    plane.position.copy(position);
+    plane.lookAt(new THREE.Vector3(x, y + 4.7, z));
+    scene.add(plane);
 
-      updateNearestDisplay(plane, textureURL, position);
+    updateNearestDisplay(plane, textureURL, position);
   });
 }
 
@@ -554,49 +593,49 @@ function updateNearestDisplay(plane, url, position) {
     if (!display.imageUrl) {
       const dist = display.position.distanceTo(position);
       if (dist < minDist) {
-          minDist = dist;
-          nearestDisplay = display;
+        minDist = dist;
+        nearestDisplay = display;
       }
     }
   });
 
   if (nearestDisplay !== null) {
-      nearestDisplay.activeImage = plane;
-      nearestDisplay.imageUrl = url;
-      nearestDisplay.children.forEach(child => {
-        child.activeImage = plane;
-        child.imageUrl = url;
+    nearestDisplay.activeImage = plane;
+    nearestDisplay.imageUrl = url;
+    nearestDisplay.children.forEach((child) => {
+      child.activeImage = plane;
+      child.imageUrl = url;
     });
   }
 }
 
 const raycaster = new THREE.Raycaster();
-var displays = []
-function addDisplays(x,y,z) {
-    var halfSize = 13;
-    const positions = [
-        new THREE.Vector3(x-halfSize, y, z-halfSize),
-        new THREE.Vector3(x+halfSize, y, z-halfSize),
-        new THREE.Vector3(x-halfSize, y, z+halfSize),
-        new THREE.Vector3(x+halfSize, y, z+halfSize)
-    ];
+var displays = [];
+function addDisplays(x, y, z) {
+  var halfSize = 13;
+  const positions = [
+    new THREE.Vector3(x - halfSize, y, z - halfSize),
+    new THREE.Vector3(x + halfSize, y, z - halfSize),
+    new THREE.Vector3(x - halfSize, y, z + halfSize),
+    new THREE.Vector3(x + halfSize, y, z + halfSize),
+  ];
 
-    positions.forEach((pos) => {
-        let newDisplay = display.clone();
-        newDisplay.position.set(pos.x, pos.y, pos.z);
-        newDisplay.lookAt(new THREE.Vector3(x, y, z));
-        scene.add(newDisplay);
-        displays.push(newDisplay);
-    });
+  positions.forEach((pos) => {
+    let newDisplay = display.clone();
+    newDisplay.position.set(pos.x, pos.y, pos.z);
+    newDisplay.lookAt(new THREE.Vector3(x, y, z));
+    scene.add(newDisplay);
+    displays.push(newDisplay);
+  });
 }
 
 function createRoom(x, y, z, roomSize, doorWidth, doorHeight) {
   let newRoom = room.clone();
-  newRoom.position.set(x, y, z);  // Visual representation positioned
+  newRoom.position.set(x, y, z); // Visual representation positioned
   scene.add(newRoom);
 
   let newColumns = columns.clone();
-  newColumns.position.set(x, y, z);  // Visual representation positioned
+  newColumns.position.set(x, y, z); // Visual representation positioned
   scene.add(newColumns);
 
   // register room in spawnedRooms
@@ -604,132 +643,167 @@ function createRoom(x, y, z, roomSize, doorWidth, doorHeight) {
   let roomZ = Math.floor(z / roomSize);
   spawnedRooms.add(roomKey(roomX, roomZ));
 
-  addDisplays(x,y,z);
+  addDisplays(x, y, z);
 
-  const thickness = 6;  // Wall thickness
-  const halfRoomSize = roomSize / 2;  // Half the dimension of the cube room
-  const halfDoorWidth = doorWidth / 2;  // Half the door width
+  const thickness = 6; // Wall thickness
+  const halfRoomSize = roomSize / 2; // Half the dimension of the cube room
+  const halfDoorWidth = doorWidth / 2; // Half the door width
 
   // Define positions and dimensions directly for collision boxes
   const positionsAndShapes = {
-      front: {
-          left: {
-              position: new CANNON.Vec3(x - halfRoomSize + (halfRoomSize - halfDoorWidth) / 2, y, z + halfRoomSize),
-              size: [halfRoomSize - halfDoorWidth - thickness, roomSize, thickness]
-          },
-          right: {
-              position: new CANNON.Vec3(x + halfRoomSize - (halfRoomSize - halfDoorWidth) / 2, y, z + halfRoomSize),
-              size: [halfRoomSize - halfDoorWidth - thickness, roomSize, thickness]
-          },
-          // top: {
-          //     position: new CANNON.Vec3(x, y - roomSize / 2 - doorHeight, z + halfRoomSize),
-          //     size: [doorWidth, roomSize - doorHeight, thickness]
-          // }
-      },
-      back: {
-          left: {
-              position: new CANNON.Vec3(x - halfRoomSize + (halfRoomSize - halfDoorWidth) / 2, y, z - halfRoomSize),
-              size: [halfRoomSize - halfDoorWidth - thickness, roomSize, thickness]
-          },
-          right: {
-              position: new CANNON.Vec3(x + halfRoomSize - (halfRoomSize - halfDoorWidth) / 2, y, z - halfRoomSize),
-              size: [halfRoomSize - halfDoorWidth - thickness, roomSize, thickness]
-          },
-          // top: {
-          //     position: new CANNON.Vec3(x, y - roomSize / 2 - doorHeight, z - halfRoomSize),
-          //     size: [doorWidth, roomSize - doorHeight, thickness]
-          // }
+    front: {
+      left: {
+        position: new CANNON.Vec3(
+          x - halfRoomSize + (halfRoomSize - halfDoorWidth) / 2,
+          y,
+          z + halfRoomSize
+        ),
+        size: [halfRoomSize - halfDoorWidth - thickness, roomSize, thickness],
       },
       right: {
-          left: {
-              position: new CANNON.Vec3(x + halfRoomSize, y, z - halfRoomSize + (halfRoomSize - halfDoorWidth) / 2),
-              size: [thickness, roomSize, halfRoomSize - halfDoorWidth - thickness]
-          },
-          right: {
-              position: new CANNON.Vec3(x + halfRoomSize, y, z + halfRoomSize - (halfRoomSize - halfDoorWidth) / 2),
-              size: [thickness, roomSize, halfRoomSize - halfDoorWidth - thickness]
-          },
-          // top: {
-          //     position: new CANNON.Vec3(x + halfRoomSize, y - roomSize / 2 - doorHeight, z),
-          //     size: [thickness, roomSize - doorHeight, doorWidth]
-          // }
+        position: new CANNON.Vec3(
+          x + halfRoomSize - (halfRoomSize - halfDoorWidth) / 2,
+          y,
+          z + halfRoomSize
+        ),
+        size: [halfRoomSize - halfDoorWidth - thickness, roomSize, thickness],
       },
+      // top: {
+      //     position: new CANNON.Vec3(x, y - roomSize / 2 - doorHeight, z + halfRoomSize),
+      //     size: [doorWidth, roomSize - doorHeight, thickness]
+      // }
+    },
+    back: {
       left: {
-          left: {
-              position: new CANNON.Vec3(x - halfRoomSize, y, z - halfRoomSize + (halfRoomSize - halfDoorWidth) / 2),
-              size: [thickness, roomSize, halfRoomSize - halfDoorWidth - thickness]
-          },
-          right: {
-              position: new CANNON.Vec3(x - halfRoomSize, y, z + halfRoomSize - (halfRoomSize - halfDoorWidth) / 2),
-              size: [thickness, roomSize, halfRoomSize - halfDoorWidth - thickness]
-          },
-          // top: {
-          //     position: new CANNON.Vec3(x - halfRoomSize, y - roomSize / 2 - doorHeight, z),
-          //     size: [thickness, roomSize - doorHeight, doorWidth]
-          // }
-      }
+        position: new CANNON.Vec3(
+          x - halfRoomSize + (halfRoomSize - halfDoorWidth) / 2,
+          y,
+          z - halfRoomSize
+        ),
+        size: [halfRoomSize - halfDoorWidth - thickness, roomSize, thickness],
+      },
+      right: {
+        position: new CANNON.Vec3(
+          x + halfRoomSize - (halfRoomSize - halfDoorWidth) / 2,
+          y,
+          z - halfRoomSize
+        ),
+        size: [halfRoomSize - halfDoorWidth - thickness, roomSize, thickness],
+      },
+      // top: {
+      //     position: new CANNON.Vec3(x, y - roomSize / 2 - doorHeight, z - halfRoomSize),
+      //     size: [doorWidth, roomSize - doorHeight, thickness]
+      // }
+    },
+    right: {
+      left: {
+        position: new CANNON.Vec3(
+          x + halfRoomSize,
+          y,
+          z - halfRoomSize + (halfRoomSize - halfDoorWidth) / 2
+        ),
+        size: [thickness, roomSize, halfRoomSize - halfDoorWidth - thickness],
+      },
+      right: {
+        position: new CANNON.Vec3(
+          x + halfRoomSize,
+          y,
+          z + halfRoomSize - (halfRoomSize - halfDoorWidth) / 2
+        ),
+        size: [thickness, roomSize, halfRoomSize - halfDoorWidth - thickness],
+      },
+      // top: {
+      //     position: new CANNON.Vec3(x + halfRoomSize, y - roomSize / 2 - doorHeight, z),
+      //     size: [thickness, roomSize - doorHeight, doorWidth]
+      // }
+    },
+    left: {
+      left: {
+        position: new CANNON.Vec3(
+          x - halfRoomSize,
+          y,
+          z - halfRoomSize + (halfRoomSize - halfDoorWidth) / 2
+        ),
+        size: [thickness, roomSize, halfRoomSize - halfDoorWidth - thickness],
+      },
+      right: {
+        position: new CANNON.Vec3(
+          x - halfRoomSize,
+          y,
+          z + halfRoomSize - (halfRoomSize - halfDoorWidth) / 2
+        ),
+        size: [thickness, roomSize, halfRoomSize - halfDoorWidth - thickness],
+      },
+      // top: {
+      //     position: new CANNON.Vec3(x - halfRoomSize, y - roomSize / 2 - doorHeight, z),
+      //     size: [thickness, roomSize - doorHeight, doorWidth]
+      // }
+    },
   };
 
   // Create each wall's collision boxes
-  Object.keys(positionsAndShapes).forEach(wallKey => {
-      const wall = positionsAndShapes[wallKey];
-      Object.keys(wall).forEach(partKey => {
-          const part = wall[partKey];
-          let wallBody = new CANNON.Body({
-              mass: 0,
-              type: CANNON.Body.KINEMATIC,
-              position: part.position
-          });
-          const boxShape = new CANNON.Box(new CANNON.Vec3(...part.size.map(s => s / 2)));  // Cannon.js uses half-extents
-          wallBody.addShape(boxShape);
-          world.addBody(wallBody);
+  Object.keys(positionsAndShapes).forEach((wallKey) => {
+    const wall = positionsAndShapes[wallKey];
+    Object.keys(wall).forEach((partKey) => {
+      const part = wall[partKey];
+      let wallBody = new CANNON.Body({
+        mass: 0,
+        type: CANNON.Body.KINEMATIC,
+        position: part.position,
       });
+      const boxShape = new CANNON.Box(
+        new CANNON.Vec3(...part.size.map((s) => s / 2))
+      ); // Cannon.js uses half-extents
+      wallBody.addShape(boxShape);
+      world.addBody(wallBody);
+    });
   });
 }
 
 let spawnedRooms = new Set();
 
 function roomKey(x, z) {
-    return `${x},${z}`;
+  return `${x},${z}`;
 }
 
 function checkAndSpawnRoom(x, z, roomSize, doorWidth, doorHeight) {
-    let key = roomKey(x, z);
-    if (!spawnedRooms.has(key)) {
-        createRoom(x * roomSize, 0, z * roomSize, roomSize, doorWidth, doorHeight);
-        load4ArtPieces(x * roomSize, 0, z * roomSize);
-        spawnedRooms.add(key);
-    }
+  let key = roomKey(x, z);
+  if (!spawnedRooms.has(key)) {
+    createRoom(x * roomSize, 0, z * roomSize, roomSize, doorWidth, doorHeight);
+    load4ArtPieces(x * roomSize, 0, z * roomSize);
+    spawnedRooms.add(key);
+  }
 }
 
 var currentPlayerRoomX = 0;
 var currentPlayerRoomZ = 0;
 
 function updatePlayerRoom(playerPosition) {
-    let newRoomX = Math.floor(playerPosition.x / roomSize);
-    let newRoomZ = Math.floor(playerPosition.z / roomSize);
+  let newRoomX = Math.floor(playerPosition.x / roomSize);
+  let newRoomZ = Math.floor(playerPosition.z / roomSize);
 
-    // Check if player has entered a new room
-    if (newRoomX !== currentPlayerRoomX || newRoomZ !== currentPlayerRoomZ) {
-        currentPlayerRoomX = newRoomX;
-        currentPlayerRoomZ = newRoomZ;
-        spawnAdjacentRooms(newRoomX, newRoomZ);
-    }
+  // Check if player has entered a new room
+  if (newRoomX !== currentPlayerRoomX || newRoomZ !== currentPlayerRoomZ) {
+    currentPlayerRoomX = newRoomX;
+    currentPlayerRoomZ = newRoomZ;
+    spawnAdjacentRooms(newRoomX, newRoomZ);
+  }
 }
 
 function spawnAdjacentRooms(x, z) {
   for (let dx = -1; dx <= 1; dx++) {
-      for (let dz = -1; dz <= 1; dz++) {
-          // Skip the current room
-          if (dx !== 0 || dz !== 0) {
-              checkAndSpawnRoom(x + dx, z + dz, roomSize, doorWidth, doorHeight);
-          }
+    for (let dz = -1; dz <= 1; dz++) {
+      // Skip the current room
+      if (dx !== 0 || dz !== 0) {
+        checkAndSpawnRoom(x + dx, z + dz, roomSize, doorWidth, doorHeight);
       }
+    }
   }
 }
 
 var mouse = {
-  x: 0, y: 0
+  x: 0,
+  y: 0,
 };
 const onMouseClick = (event) => {
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -756,16 +830,16 @@ function handleSceneClick() {
     const displayClicked = intersects[0].object;
     handleDisplayClicked(displayClicked);
   } else {
-    if (document.getElementById('topImage').style.display === 'block') {
+    if (document.getElementById("topImage").style.display === "block") {
       hideDisplayOverlay();
     }
   }
-};
+}
 
 function handleDisplayClicked(displayClicked) {
   if (displayClicked) {
-      document.getElementById('topImage').src = displayClicked.imageUrl;
-      showDisplayOverlay();
+    document.getElementById("topImage").src = displayClicked.imageUrl;
+    showDisplayOverlay();
   }
 }
 
@@ -790,21 +864,21 @@ document.addEventListener(
 );
 
 function showDisplayOverlay() {
-  document.getElementById('displayImage').style.display = 'block';
-  document.getElementById('topImage').style.display = 'block';
+  document.getElementById("displayImage").style.display = "block";
+  document.getElementById("topImage").style.display = "block";
   adjustTopImageSize();
 }
 
 function hideDisplayOverlay() {
-  document.getElementById('displayImage').style.display = 'none';
-  document.getElementById('topImage').style.display = 'none';
+  document.getElementById("displayImage").style.display = "none";
+  document.getElementById("topImage").style.display = "none";
 }
 
 function adjustTopImageSize() {
-  const backgroundImage = document.querySelector('.full-screen-image');
-  const topImage = document.querySelector('.top-image');
-  topImage.style.maxWidth = backgroundImage.offsetWidth * 0.5 + 'px';
-  topImage.style.maxHeight = backgroundImage.offsetHeight * 0.5 + 'px';
+  const backgroundImage = document.querySelector(".full-screen-image");
+  const topImage = document.querySelector(".top-image");
+  topImage.style.maxWidth = backgroundImage.offsetWidth * 0.5 + "px";
+  topImage.style.maxHeight = backgroundImage.offsetHeight * 0.5 + "px";
 }
 
 // JOYSTICK
@@ -865,7 +939,7 @@ function addJoystick() {
 
 // ANIMATE
 const clock = new THREE.Clock();
-const timeStep = 1/60;
+const timeStep = 1 / 60;
 var simulating = true;
 function animate() {
   if (simulating) {
@@ -910,14 +984,14 @@ window.addEventListener("resize", onWindowResize);
 
 function generateFloor() {
   // Ground Physics
-  const groundMaterial = new CANNON.Material('ground')
-  groundMaterial.friction = 0.3
+  const groundMaterial = new CANNON.Material("ground");
+  groundMaterial.friction = 0.3;
   const groundShape = new CANNON.Plane();
   const groundBody = new CANNON.Body({ mass: 0, material: groundMaterial });
-  groundBody.addShape(groundShape)
-  groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0)
+  groundBody.addShape(groundShape);
+  groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
   groundBody.position.set(0, -1, 0);
-  world.addBody(groundBody)
+  world.addBody(groundBody);
 }
 
 function light() {
