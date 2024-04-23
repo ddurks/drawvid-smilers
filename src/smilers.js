@@ -504,8 +504,8 @@ class DrawvidDotCom extends Phaser.Scene {
 
     let loungeButton = this.add
       .image(
-        (2 * GAME.SIZE) / 3,
-        GAME.SIZE - GLOBAL_SCALE * 21,
+        (3 * GAME.SIZE) / 4,
+        GAME.SIZE - GLOBAL_SCALE * 32,
         "lounge-button"
       )
       .setOrigin(0.5, 0)
@@ -514,17 +514,17 @@ class DrawvidDotCom extends Phaser.Scene {
     loungeButton.on("pointerdown", () => {
       window.location.href = "http://onlinelounge.drawvid.com";
     });
-    loungeButton.setDepth(11);
+    loungeButton.setDepth(10);
 
     let divedaveButton = this.add
-      .image(GAME.SIZE / 6, GAME.SIZE - GLOBAL_SCALE * 62, "divedave-button")
+      .image(GAME.SIZE / 5, GAME.SIZE - GLOBAL_SCALE * 64, "divedave-button")
       .setOrigin(0.5, 0)
       .setInteractive();
     divedaveButton.setScale(GLOBAL_SCALE);
     divedaveButton.on("pointerdown", () => {
       window.location.href = "http://drawvid.com/code/divedave";
     });
-    divedaveButton.setDepth(10);
+    divedaveButton.setDepth(11);
 
     // controls
     this.controls = {
