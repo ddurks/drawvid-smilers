@@ -460,11 +460,10 @@ function getRandomInt(max) {
 const roomSize = 40;
 const doorWidth = 1;
 const doorHeight = 20;
-var room, display, columns;
+var room, display;
 gLoader.load("./assets/gallery.glb", (gltf) => {
   room = gltf.scene.getObjectByName("room");
   display = gltf.scene.getObjectByName("display");
-  columns = gltf.scene.getObjectByName("columns");
 
   createRoom(0, 0, 0, roomSize, doorWidth, doorHeight); // Central room
   for (let i = -1; i <= 1; i++) {
@@ -696,10 +695,6 @@ function createRoom(x, y, z, roomSize, doorWidth, doorHeight) {
   newRoom.position.set(x, y, z); // Visual representation positioned
   scene.add(newRoom);
 
-  let newColumns = columns.clone();
-  newColumns.position.set(x, y, z); // Visual representation positioned
-  scene.add(newColumns);
-
   // register room in spawnedRooms
   let roomX = Math.floor(x / roomSize);
   let roomZ = Math.floor(z / roomSize);
@@ -830,7 +825,7 @@ function roomKey(x, z) {
 
 function checkAndSpawnRoom(x, z, roomSize, doorWidth, doorHeight) {
   let key = roomKey(x, z);
-  if (!spawnedRooms.has(key)) {
+  if (!spawnedRooms.has(key) && artIndex3d <= TOTAL_ART-1) {
     createRoom(x * roomSize, 0, z * roomSize, roomSize, doorWidth, doorHeight);
     load4ArtPieces(x * roomSize, 0, z * roomSize);
     spawnedRooms.add(key);
