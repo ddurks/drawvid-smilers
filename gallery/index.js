@@ -578,7 +578,7 @@ function createPlaneWithTexture(textureURL, position, x, y, z) {
     const geometry = new THREE.PlaneGeometry(5.5, 5.5);
     const material = new THREE.MeshBasicMaterial({
       map: texture,
-      side: THREE.DoubleSide,
+      side: THREE.FrontSide,
     });
     const plane = new THREE.Mesh(geometry, material);
 
