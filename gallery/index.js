@@ -17,8 +17,8 @@ if (
   IS_MOBILE = false;
 }
 document.getElementById("controls").innerHTML = IS_MOBILE
-? "[joystick] - move  [pinch and swipe] - camera"
-: "[W] [A] [S] [D] - move  [scroll wheel] - zoom  [click + drag] - camera";
+  ? "[joystick] - move  [pinch and swipe] - camera"
+  : "[W] [A] [S] [D] - move  [scroll wheel] - zoom  [click + drag] - camera";
 
 AWS.config.update({
   region: "ca-central-1",
@@ -64,17 +64,17 @@ function setSliderAttributes(slider) {
     // Mobile devices
     slider.min = 50;
     slider.max = 300;
-    slider.value = 100;
+    slider.value = 150;
   } else if (screenWidth <= 1024) {
     // Tablets
     slider.min = 100;
     slider.max = 500;
-    slider.value = 200;
+    slider.value = 250;
   } else {
     // Desktops
     slider.min = 150;
     slider.max = 1000;
-    slider.value = 300;
+    slider.value = 500;
   }
   adjustImageSize(slider.value);
 
@@ -98,7 +98,7 @@ function toggleView() {
   const slider = document.getElementById("slider");
   const body = document.body;
   const controls = document.getElementById("controls");
-  const toggleImage = document.getElementById('toggleImage');
+  const toggleImage = document.getElementById("toggleImage");
   const joystick = document.getElementById("joystickWrapper");
 
   if (currentView === "2D") {
@@ -111,8 +111,8 @@ function toggleView() {
       ? "[joystick] - move  [pinch and swipe] - camera"
       : "[W] [A] [S] [D] - move  [scroll wheel] - zoom  [click + drag] - camera";
     simulating = true;
-    toggleImage.src = './assets/2d.png';
-    joystick.style.display = 'block';
+    toggleImage.src = "./assets/2d.png";
+    joystick.style.display = "block";
   } else {
     threeContainer.style.display = "none";
     galleryContainer.style.display = "flex";
@@ -122,8 +122,8 @@ function toggleView() {
     currentView = "2D";
     controls.innerHTML = "";
     simulating = false;
-    toggleImage.src = './assets/3d.png';
-    joystick.style.display = 'none';
+    toggleImage.src = "./assets/3d.png";
+    joystick.style.display = "none";
   }
 }
 
@@ -385,7 +385,7 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
-renderer.shadowMap.enabled = true;
+renderer.shadowMap.enabled = false;
 
 // CONTROLS
 const orbitControls = new OrbitControls(camera, renderer.domElement);
@@ -412,9 +412,6 @@ var characterControls,
   animationsMap = new Map(),
   body;
 gLoader.load("./assets/computer_guy_grey.glb", (gltf) => {
-  gltf.scene.traverse(function (object) {
-    if (object.isMesh) object.castShadow = true;
-  });
   guy = gltf.scene.children[0];
   guy.position.set(0, 1, 0);
   guy.rotation.y = Math.PI;
@@ -465,9 +462,6 @@ const doorWidth = 1;
 const doorHeight = 20;
 var room, display, columns;
 gLoader.load("./assets/gallery.glb", (gltf) => {
-  gltf.scene.traverse(function (object) {
-    if (object.isMesh) object.castShadow = true;
-  });
   room = gltf.scene.getObjectByName("room");
   display = gltf.scene.getObjectByName("display");
   columns = gltf.scene.getObjectByName("columns");
@@ -495,26 +489,37 @@ const imageContainer = document.getElementById("imageContainer");
 var allArtData;
 async function loadAllArt() {
   const prefix = "png/";
-  s3.listObjectsV2({ Bucket: bucketName, Prefix: prefix }, (err, data) => {
-    if (err) console.log(err, err.stack);
-    else {
-      allArtData = data.Contents;
-      load4ArtPieces(0, 0, 0);
-      for (let i = -1; i <= 1; i++) {
-        for (let j = -1; j <= 1; j++) {
-          if (i !== 0 || j !== 0) {
-            load4ArtPieces(i * roomSize, 0, j * roomSize);
+  s3.listObjectsV2(
+    { Bucket: bucketName, Prefix: prefix },
+    async (err, data) => {
+      if (err) console.log(err, err.stack);
+      else {
+        allArtData = shuffle(data.Contents);
+        await load4ArtPieces(0, 0, 0);
+        for (let i = -1; i <= 1; i++) {
+          for (let j = -1; j <= 1; j++) {
+            if (i !== 0 || j !== 0) {
+              await load4ArtPieces(i * roomSize, 0, j * roomSize);
+            }
           }
         }
       }
     }
-  });
+  );
+}
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
 }
 const TOTAL_ART = 182;
-const chosenImages = new Set();
+let artIndex3d = 0,
+  artIndex2d = 0;
 loadAllArt();
 
-function load4ArtPieces(x, y, z) {
+async function load4ArtPieces(x, y, z) {
   const halfSize = 11.38;
   const height = y + 4.7;
   const positions = [
@@ -523,30 +528,72 @@ function load4ArtPieces(x, y, z) {
     new THREE.Vector3(x - halfSize, height, z + halfSize),
     new THREE.Vector3(x + halfSize, height, z + halfSize),
   ];
-  Array.from({ length: 4 }, () => {
-    let file;
-    do {
-      if (chosenImages.size === TOTAL_ART) {
-        break;
-      }
-      const index = Math.floor(Math.random() * TOTAL_ART);
-      file = allArtData[index];
-    } while (chosenImages.has(file.Key));
-    chosenImages.add(file.Key);
-    return file;
-  }).forEach((file, index) => {
+
+  const artPieces = Array.from({ length: 4 }, () => {
+    if (artIndex3d >= TOTAL_ART) return null;
+    return allArtData[artIndex3d++];
+  });
+  artIndex2d = artIndex3d;
+
+  artPieces.forEach(async (file, index) => {
+    if (!file) return;
     const params = {
       Bucket: bucketName,
       Key: file.Key,
     };
-    s3.getObject(params, (err, data) => {
-      if (err) console.log(err, err.stack);
-      else {
-        const url = URL.createObjectURL(new Blob([data.Body]));
-        createPlaneWithTexture(url, positions[index], x, y, z);
+    try {
+      const data = await s3GetObjectPromise(params);
+      const url = URL.createObjectURL(new Blob([data.Body]));
+      createPlaneWithTexture(url, positions[index], x, y, z);
+      addImageTo2DGallery(url);
+    } catch (err) {
+      console.log(err, err.stack);
+    }
+  });
+}
 
-        addImageTo2DGallery(url);
-      }
+async function loadMoreArt2D() {
+  const artPieces = Array.from({ length: 10 }, () => {
+    if (artIndex2d >= TOTAL_ART) return null;
+    return allArtData[artIndex2d++];
+  });
+
+  artPieces.forEach(async (file, index) => {
+    if (!file) return;
+    const params = {
+      Bucket: bucketName,
+      Key: file.Key,
+    };
+    try {
+      const data = await s3GetObjectPromise(params);
+      const url = URL.createObjectURL(new Blob([data.Body]));
+      addImageTo2DGallery(url);
+    } catch (err) {
+      console.log(err, err.stack);
+    }
+  });
+}
+
+let timer;
+window.addEventListener("scroll", () => {
+  if (timer) {
+    clearTimeout(timer);
+  }
+  timer = setTimeout(() => {
+    if (
+      currentView === "2D" &&
+      window.innerHeight + window.scrollY >= document.body.offsetHeight
+    ) {
+      loadMoreArt2D();
+    }
+  }, 1000); // Adjust the timeout to suit your needs, 100ms is generally a good starting point
+});
+
+function s3GetObjectPromise(params) {
+  return new Promise((resolve, reject) => {
+    s3.getObject(params, (err, data) => {
+      if (err) reject(err);
+      else resolve(data);
     });
   });
 }
@@ -566,7 +613,18 @@ function addImageTo2DGallery(url) {
   const img = document.createElement("img");
   img.className = "flex-img";
   img.src = url;
-  img.alt = "Gallery Image"; // Always provide alt text for accessibility
+  img.alt = "Gallery Image";
+
+  // Add an onload event listener to revoke the blob URL after the image has loaded
+  img.onload = () => {
+    URL.revokeObjectURL(url); // Free up the blob URL after it's no longer needed
+  };
+
+  // Add error handling to revoke URL in case the image fails to load
+  img.onerror = () => {
+    console.log("Failed to load gallery image");
+    URL.revokeObjectURL(url); // Ensure to free up resources on error as well
+  };
 
   div.appendChild(disp);
   div.appendChild(img);
@@ -1003,14 +1061,5 @@ function light() {
 
   const dirLight = new THREE.DirectionalLight(0xffffff, 1);
   dirLight.position.set(-60, 100, -10);
-  dirLight.castShadow = true;
-  dirLight.shadow.camera.top = 50;
-  dirLight.shadow.camera.bottom = -50;
-  dirLight.shadow.camera.left = -50;
-  dirLight.shadow.camera.right = 50;
-  dirLight.shadow.camera.near = 0.1;
-  dirLight.shadow.camera.far = 200;
-  dirLight.shadow.mapSize.width = 4096;
-  dirLight.shadow.mapSize.height = 4096;
   scene.add(dirLight);
 }
