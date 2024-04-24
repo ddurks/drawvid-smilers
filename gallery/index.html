@@ -6,8 +6,9 @@
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <div id="toggleControl" style="position: fixed; right: 10px; top: 10px; z-index: 100;">
-      <button id="toggleView">Toggle 2D/3D</button>
+    <div id="toggleControl">
+      <button id="toggleView" class="btn">      switch to
+        <img id="toggleImage" src="./assets/2d.png" alt="Dimension Toggle"/></button>
     </div>
     <img id="displayImage" src="./assets/display.png" alt="Gallery Display" class="full-screen-image">
     <img id="topImage" alt="Gallery Image" class="top-image">
@@ -20,12 +21,7 @@
     <canvas id="threeCanvas"></canvas>
     <h2 id="controls"></h2>
     <img id="loading" src="assets/loading.gif">
-    <div id="joystickWrapper1"></div>
-    <div id="joystickWrapper2">
-        <div id="jumpButton">
-            <p>JUMP</p>
-        </div>
-    </div>
+    <div id="joystickWrapper"></div>
     <div id="slider">
       <h2>size:   </h2>
       <input type="range" id="sizeSlider">

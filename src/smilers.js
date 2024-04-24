@@ -378,6 +378,8 @@ class DrawvidDotCom extends Phaser.Scene {
     this.load.image("code", "assets/code-button.png");
     this.load.image("about", "assets/about-button.png");
     this.load.image("paradise", "assets/paradise-button.png");
+    this.load.image("gallery-bg", "assets/gallery-bg.png");
+    this.load.image("gallery-fg", "assets/gallery-fg.png");
     this.load.image("home", "assets/home-button.png");
     this.load.image("logo", "assets/drawvid-logo.png");
     this.load.image("popup", "assets/popup.png");
@@ -465,10 +467,13 @@ class DrawvidDotCom extends Phaser.Scene {
 
     this.spawnClouds();
     this.spawnBackFlowers();
+    let galleryBG = this.physics.add.image(GAME.SIZE - 64, 7*GAME.SIZE / 11, "gallery-bg");
+    galleryBG.body.setAllowGravity(false);
+    galleryBG.setScale(GLOBAL_SCALE);
     this.player = new Smiler(
       this,
       GAME.SIZE / 2,
-      GAME.SIZE / 2 + PLAYER_SIZE * GLOBAL_SCALE
+      GAME.SIZE / 4 + PLAYER_SIZE * GLOBAL_SCALE
     );
     this.player.setScale(GLOBAL_SCALE);
     this.addButtons();
@@ -504,7 +509,7 @@ class DrawvidDotCom extends Phaser.Scene {
 
     let loungeButton = this.add
       .image(
-        (3 * GAME.SIZE) / 4,
+        (4 * GAME.SIZE) / 5,
         GAME.SIZE - GLOBAL_SCALE * 32,
         "lounge-button"
       )
@@ -517,7 +522,10 @@ class DrawvidDotCom extends Phaser.Scene {
     loungeButton.setDepth(10);
 
     let divedaveButton = this.add
-      .image(GAME.SIZE / 5, GAME.SIZE - GLOBAL_SCALE * 64, "divedave-button")
+      .image(
+          GAME.SIZE / 8, GAME.SIZE - GLOBAL_SCALE * 32,
+        "divedave-button"
+      )
       .setOrigin(0.5, 0)
       .setInteractive();
     divedaveButton.setScale(GLOBAL_SCALE);
@@ -573,13 +581,15 @@ class DrawvidDotCom extends Phaser.Scene {
       this.aboutPopUp();
     });
     about.setDepth(11);
-    // let art = this.physics.add.image(GAME.SIZE/2 + PLAYER_SIZE*2*GLOBAL_SCALE + PLAYER_SIZE, GAME.SIZE/3, 'art').setInteractive();
-    // art.body.setAllowGravity(false);
-    // art.setScale(GLOBAL_SCALE);
-    // art.on('pointerdown', () => {
-    //     window.location.href = "/shop";
-    // });
-    // art.setDepth(11);
+    let gallery = this.physics.add
+      .image(GAME.SIZE - 64, 7*GAME.SIZE / 11, "gallery-fg")
+      .setInteractive();
+    gallery.body.setAllowGravity(false);
+    gallery.setScale(GLOBAL_SCALE);
+    gallery.on("pointerdown", () => {
+      window.location.href = "/gallery";
+    });
+    gallery.setDepth(11);
   }
 
   aboutPopUp() {
@@ -733,6 +743,9 @@ class DrawvidDotCom extends Phaser.Scene {
   }
 
   playerHandler() {
+    if (this.player.x > 460) {
+      window.location.href = "/gallery";
+    }
     if (IS_MOBILE) {
       this.playerMobileMovementHandler();
     } else {

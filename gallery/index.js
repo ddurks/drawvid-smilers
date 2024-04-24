@@ -17,8 +17,8 @@ if (
   IS_MOBILE = false;
 }
 document.getElementById("controls").innerHTML = IS_MOBILE
-  ? "[joystick] - move  [pinch and swipe] - camera"
-  : "[W] [A] [S] [D] - move  [scroll wheel] - zoom  [click + drag] - camera";
+? "[joystick] - move  [pinch and swipe] - camera"
+: "[W] [A] [S] [D] - move  [scroll wheel] - zoom  [click + drag] - camera";
 
 AWS.config.update({
   region: "ca-central-1",
@@ -28,11 +28,10 @@ AWS.config.update({
 });
 const s3 = new AWS.S3();
 
-let currentView = "3D"; // Start with 2D view
+let currentView = "3D";
 
 document.addEventListener("DOMContentLoaded", function () {
-  const toggleButton = document.getElementById("toggleView");
-  toggleButton.addEventListener("click", toggleView);
+  document.getElementById("toggleView").addEventListener("click", toggleView);
 
   const slider = document.getElementById("sizeSlider");
   setSliderAttributes(slider);
@@ -44,7 +43,6 @@ document.addEventListener("DOMContentLoaded", function () {
   headerImg.onload = function () {
     adjustImagePosition(this);
   };
-
   if (headerImg.complete) {
     adjustImagePosition(headerImg);
   }
@@ -65,17 +63,17 @@ function setSliderAttributes(slider) {
   if (screenWidth <= 480) {
     // Mobile devices
     slider.min = 50;
-    slider.max = 200;
+    slider.max = 300;
     slider.value = 100;
   } else if (screenWidth <= 1024) {
     // Tablets
     slider.min = 100;
-    slider.max = 300;
+    slider.max = 500;
     slider.value = 200;
   } else {
     // Desktops
     slider.min = 150;
-    slider.max = 500;
+    slider.max = 1000;
     slider.value = 300;
   }
   adjustImageSize(slider.value);
@@ -100,6 +98,8 @@ function toggleView() {
   const slider = document.getElementById("slider");
   const body = document.body;
   const controls = document.getElementById("controls");
+  const toggleImage = document.getElementById('toggleImage');
+  const joystick = document.getElementById("joystickWrapper");
 
   if (currentView === "2D") {
     threeContainer.style.display = "block";
@@ -111,14 +111,19 @@ function toggleView() {
       ? "[joystick] - move  [pinch and swipe] - camera"
       : "[W] [A] [S] [D] - move  [scroll wheel] - zoom  [click + drag] - camera";
     simulating = true;
+    toggleImage.src = './assets/2d.png';
+    joystick.style.display = 'block';
   } else {
     threeContainer.style.display = "none";
-    galleryContainer.style.display = "block";
+    galleryContainer.style.display = "flex";
+    galleryContainer.style.flexDirection = "column";
     slider.style.display = "flex";
     body.style.overflow = "auto";
     currentView = "2D";
     controls.innerHTML = "";
     simulating = false;
+    toggleImage.src = './assets/3d.png';
+    joystick.style.display = 'none';
   }
 }
 
@@ -398,7 +403,9 @@ light();
 generateFloor();
 
 // LOAD ASSETS and BUILD SCENE
-var gLoader = new GLTFLoader();
+const gLoader = new GLTFLoader();
+const textureLoader = new THREE.TextureLoader();
+const raycaster = new THREE.Raycaster();
 
 var characterControls,
   guy,
@@ -452,8 +459,6 @@ gLoader.load("./assets/computer_guy_grey.glb", (gltf) => {
 function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
-
-const textureLoader = new THREE.TextureLoader();
 
 const roomSize = 40;
 const doorWidth = 1;
@@ -609,7 +614,6 @@ function updateNearestDisplay(plane, url, position) {
   }
 }
 
-const raycaster = new THREE.Raycaster();
 var displays = [];
 function addDisplays(x, y, z) {
   var halfSize = 13;
@@ -895,7 +899,7 @@ var joyValues = {
 
 function addJoystick() {
   const options = {
-    zone: document.getElementById("joystickWrapper1"),
+    zone: document.getElementById("joystickWrapper"),
     size: window.innerWidth / 3,
     multitouch: true,
     maxNumberOfNipples: 2,
