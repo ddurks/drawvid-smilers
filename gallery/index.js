@@ -63,17 +63,17 @@ function setSliderAttributes(slider) {
   if (screenWidth <= 480) {
     // Mobile devices
     slider.min = 50;
-    slider.max = 300;
+    slider.max = screenWidth;
     slider.value = 150;
   } else if (screenWidth <= 1024) {
     // Tablets
     slider.min = 100;
-    slider.max = 500;
+    slider.max = screenWidth;
     slider.value = 250;
   } else {
     // Desktops
     slider.min = 150;
-    slider.max = 1000;
+    slider.max = screenWidth;
     slider.value = 500;
   }
   adjustImageSize(slider.value);
@@ -124,6 +124,7 @@ function toggleView() {
     simulating = false;
     toggleImage.src = "./assets/3d.png";
     joystick.style.display = "none";
+    hideDisplayOverlay();
   }
 }
 
@@ -151,19 +152,11 @@ export class CharacterControls {
   oldPosition = null;
   walkStart = null;
 
-  constructor(
-    model,
-    mixer,
-    animationsMap,
-    orbitControl,
-    camera,
-    currentAction
-  ) {
+  constructor(model, mixer, animationsMap, camera, currentAction) {
     this.model = model;
     this.mixer = mixer;
     this.animationsMap = animationsMap;
     this.currentAction = currentAction;
-    this.orbitControl = orbitControl;
     this.camera = camera;
   }
 
@@ -266,7 +259,7 @@ export class CharacterControls {
     this.cameraTarget.x = body.position.x;
     this.cameraTarget.y = body.position.y + 3;
     this.cameraTarget.z = body.position.z;
-    this.orbitControl.target = this.cameraTarget;
+    orbitControls.target = this.cameraTarget;
   }
 
   directionOffset(keysPressed) {
@@ -447,7 +440,6 @@ gLoader.load("./assets/computer_guy_grey.glb", (gltf) => {
     guy,
     mixer,
     animationsMap,
-    orbitControls,
     camera,
     "idle"
   );
@@ -614,11 +606,6 @@ function addImageTo2DGallery(url) {
   img.src = url;
   img.alt = "Gallery Image";
 
-  // Add an onload event listener to revoke the blob URL after the image has loaded
-  img.onload = () => {
-    URL.revokeObjectURL(url); // Free up the blob URL after it's no longer needed
-  };
-
   // Add error handling to revoke URL in case the image fails to load
   img.onerror = () => {
     console.log("Failed to load gallery image");
@@ -630,21 +617,33 @@ function addImageTo2DGallery(url) {
   imageContainer.appendChild(div);
 }
 
+const sharedGeometry = new THREE.PlaneGeometry(5.5, 5.5);
+const img = new Image();
 function createPlaneWithTexture(textureURL, position, x, y, z) {
-  textureLoader.load(textureURL, (texture) => {
-    const geometry = new THREE.PlaneGeometry(5.5, 5.5);
+  img.onload = function () {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = img.width / 2;
+    canvas.height = img.height / 2;
+
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    const texture = new THREE.Texture(canvas);
+    texture.needsUpdate = true;
+
     const material = new THREE.MeshBasicMaterial({
       map: texture,
       side: THREE.FrontSide,
     });
-    const plane = new THREE.Mesh(geometry, material);
+    const plane = new THREE.Mesh(sharedGeometry, material);
 
     plane.position.copy(position);
     plane.lookAt(new THREE.Vector3(x, y + 4.7, z));
     scene.add(plane);
 
     updateNearestDisplay(plane, textureURL, position);
-  });
+  };
+  img.src = textureURL;
 }
 
 function updateNearestDisplay(plane, url, position) {
@@ -690,144 +689,114 @@ function addDisplays(x, y, z) {
   });
 }
 
+const spawnedRooms = new Set();
+const existingWalls = new Set();
 function createRoom(x, y, z, roomSize, doorWidth, doorHeight) {
   let newRoom = room.clone();
-  newRoom.position.set(x, y, z); // Visual representation positioned
+  newRoom.position.set(x, y, z);
   scene.add(newRoom);
 
-  // register room in spawnedRooms
   let roomX = Math.floor(x / roomSize);
   let roomZ = Math.floor(z / roomSize);
   spawnedRooms.add(roomKey(roomX, roomZ));
 
   addDisplays(x, y, z);
 
-  const thickness = 6; // Wall thickness
-  const halfRoomSize = roomSize / 2; // Half the dimension of the cube room
-  const halfDoorWidth = doorWidth / 2; // Half the door width
+  const thickness = 6;
+  const halfRoomSize = roomSize / 2;
+  const halfDoorWidth = doorWidth / 2;
 
-  // Define positions and dimensions directly for collision boxes
   const positionsAndShapes = {
     front: {
       left: {
-        position: new CANNON.Vec3(
-          x - halfRoomSize + (halfRoomSize - halfDoorWidth) / 2,
-          y,
-          z + halfRoomSize
-        ),
+        position: `${
+          x - halfRoomSize + (halfRoomSize - halfDoorWidth) / 2
+        }_${y}_${z + halfRoomSize}`,
         size: [halfRoomSize - halfDoorWidth - thickness, roomSize, thickness],
       },
       right: {
-        position: new CANNON.Vec3(
-          x + halfRoomSize - (halfRoomSize - halfDoorWidth) / 2,
-          y,
-          z + halfRoomSize
-        ),
+        position: `${
+          x + halfRoomSize - (halfRoomSize - halfDoorWidth) / 2
+        }_${y}_${z + halfRoomSize}`,
         size: [halfRoomSize - halfDoorWidth - thickness, roomSize, thickness],
       },
-      // top: {
-      //     position: new CANNON.Vec3(x, y - roomSize / 2 - doorHeight, z + halfRoomSize),
-      //     size: [doorWidth, roomSize - doorHeight, thickness]
-      // }
     },
     back: {
       left: {
-        position: new CANNON.Vec3(
-          x - halfRoomSize + (halfRoomSize - halfDoorWidth) / 2,
-          y,
-          z - halfRoomSize
-        ),
+        position: `${
+          x - halfRoomSize + (halfRoomSize - halfDoorWidth) / 2
+        }_${y}_${z - halfRoomSize}`,
         size: [halfRoomSize - halfDoorWidth - thickness, roomSize, thickness],
       },
       right: {
-        position: new CANNON.Vec3(
-          x + halfRoomSize - (halfRoomSize - halfDoorWidth) / 2,
-          y,
-          z - halfRoomSize
-        ),
+        position: `${
+          x + halfRoomSize - (halfRoomSize - halfDoorWidth) / 2
+        }_${y}_${z - halfRoomSize}`,
         size: [halfRoomSize - halfDoorWidth - thickness, roomSize, thickness],
       },
-      // top: {
-      //     position: new CANNON.Vec3(x, y - roomSize / 2 - doorHeight, z - halfRoomSize),
-      //     size: [doorWidth, roomSize - doorHeight, thickness]
-      // }
     },
     right: {
       left: {
-        position: new CANNON.Vec3(
-          x + halfRoomSize,
-          y,
+        position: `${x + halfRoomSize}_${y}_${
           z - halfRoomSize + (halfRoomSize - halfDoorWidth) / 2
-        ),
+        }`,
         size: [thickness, roomSize, halfRoomSize - halfDoorWidth - thickness],
       },
       right: {
-        position: new CANNON.Vec3(
-          x + halfRoomSize,
-          y,
+        position: `${x + halfRoomSize}_${y}_${
           z + halfRoomSize - (halfRoomSize - halfDoorWidth) / 2
-        ),
+        }`,
         size: [thickness, roomSize, halfRoomSize - halfDoorWidth - thickness],
       },
-      // top: {
-      //     position: new CANNON.Vec3(x + halfRoomSize, y - roomSize / 2 - doorHeight, z),
-      //     size: [thickness, roomSize - doorHeight, doorWidth]
-      // }
     },
     left: {
       left: {
-        position: new CANNON.Vec3(
-          x - halfRoomSize,
-          y,
+        position: `${x - halfRoomSize}_${y}_${
           z - halfRoomSize + (halfRoomSize - halfDoorWidth) / 2
-        ),
+        }`,
         size: [thickness, roomSize, halfRoomSize - halfDoorWidth - thickness],
       },
       right: {
-        position: new CANNON.Vec3(
-          x - halfRoomSize,
-          y,
+        position: `${x - halfRoomSize}_${y}_${
           z + halfRoomSize - (halfRoomSize - halfDoorWidth) / 2
-        ),
+        }`,
         size: [thickness, roomSize, halfRoomSize - halfDoorWidth - thickness],
       },
-      // top: {
-      //     position: new CANNON.Vec3(x - halfRoomSize, y - roomSize / 2 - doorHeight, z),
-      //     size: [thickness, roomSize - doorHeight, doorWidth]
-      // }
     },
   };
 
-  // Create each wall's collision boxes
+  // Create each wall's collision boxes only if they don't exist
   Object.keys(positionsAndShapes).forEach((wallKey) => {
     const wall = positionsAndShapes[wallKey];
     Object.keys(wall).forEach((partKey) => {
       const part = wall[partKey];
-      let wallBody = new CANNON.Body({
-        mass: 0,
-        type: CANNON.Body.KINEMATIC,
-        position: part.position,
-      });
-      const boxShape = new CANNON.Box(
-        new CANNON.Vec3(...part.size.map((s) => s / 2))
-      ); // Cannon.js uses half-extents
-      wallBody.addShape(boxShape);
-      world.addBody(wallBody);
+      if (!existingWalls.has(part.position)) {
+        existingWalls.add(part.position);
+        const positionComponents = part.position.split("_").map(Number);
+        let wallBody = new CANNON.Body({
+          mass: 0,
+          type: CANNON.Body.KINEMATIC,
+          position: new CANNON.Vec3(...positionComponents),
+        });
+        const boxShape = new CANNON.Box(
+          new CANNON.Vec3(...part.size.map((s) => s / 2))
+        );
+        wallBody.addShape(boxShape);
+        world.addBody(wallBody);
+      }
     });
   });
 }
-
-let spawnedRooms = new Set();
 
 function roomKey(x, z) {
   return `${x},${z}`;
 }
 
-function checkAndSpawnRoom(x, z, roomSize, doorWidth, doorHeight) {
+async function checkAndSpawnRoom(x, z, roomSize, doorWidth, doorHeight) {
   let key = roomKey(x, z);
-  if (!spawnedRooms.has(key) && artIndex3d <= TOTAL_ART-1) {
+  if (!spawnedRooms.has(key) && artIndex3d <= TOTAL_ART - 1) {
     createRoom(x * roomSize, 0, z * roomSize, roomSize, doorWidth, doorHeight);
-    load4ArtPieces(x * roomSize, 0, z * roomSize);
+    await load4ArtPieces(x * roomSize, 0, z * roomSize);
     spawnedRooms.add(key);
   }
 }
@@ -847,12 +816,18 @@ function updatePlayerRoom(playerPosition) {
   }
 }
 
-function spawnAdjacentRooms(x, z) {
+async function spawnAdjacentRooms(x, z) {
   for (let dx = -1; dx <= 1; dx++) {
     for (let dz = -1; dz <= 1; dz++) {
       // Skip the current room
       if (dx !== 0 || dz !== 0) {
-        checkAndSpawnRoom(x + dx, z + dz, roomSize, doorWidth, doorHeight);
+        await checkAndSpawnRoom(
+          x + dx,
+          z + dz,
+          roomSize,
+          doorWidth,
+          doorHeight
+        );
       }
     }
   }
@@ -863,19 +838,23 @@ var mouse = {
   y: 0,
 };
 const onMouseClick = (event) => {
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  if (currentView === "3D") {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-  handleSceneClick();
+    handleSceneClick();
+  }
 };
 
 const onTouchStart = (event) => {
-  const touch = event.touches[0];
+  if (currentView === "3D") {
+    const touch = event.touches[0];
 
-  mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+    mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
 
-  handleSceneClick();
+    handleSceneClick();
+  }
 };
 
 function handleSceneClick() {
