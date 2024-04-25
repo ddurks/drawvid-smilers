@@ -77,11 +77,6 @@ function setSliderAttributes(slider) {
     slider.value = 500;
   }
   adjustImageSize(slider.value);
-
-  // Optional: Update dynamically on window resize
-  window.addEventListener("resize", () => {
-    setSliderAttributes(slider);
-  });
 }
 
 function adjustImageSize(value) {
@@ -409,7 +404,6 @@ gLoader.load("./assets/computer_guy_grey.glb", (gltf) => {
   guy.position.set(0, 1, 0);
   guy.rotation.y = Math.PI;
   scene.add(guy);
-  camera.position.add(guy.position);
 
   const slipperyMaterial = new CANNON.Material("slippery");
   slipperyMaterial.friction = 0;
