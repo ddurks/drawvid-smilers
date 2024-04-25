@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>drawvid image</title>
+<style>
+  body, html {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-image: url('./../assets/marble.png'); /* Path to your background image */
+    background-position: center; /* Centers the background image */
+    background-size: cover; /* Cover the entire viewport without stretching */
+    background-attachment: fixed; /* Optional: Keeps the background image fixed during scrolling */
+    background-repeat: no-repeat;
+  }
+
+  .fullscreen-image {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+  }
+</style>
+</head>
+<body>
+<img src="" alt="Drawvid Gallery Image" id="fullscreenImage" class="fullscreen-image">
+
+<script>
+  window.onload = function() {
+    var imageUrl = new URLSearchParams(window.location.search).get('url');
+    document.getElementById('fullscreenImage').src = imageUrl;
+  };
+</script>
+</body>
+</html>
