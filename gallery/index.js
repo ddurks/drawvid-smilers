@@ -46,6 +46,12 @@ document.addEventListener("DOMContentLoaded", function () {
   if (headerImg.complete) {
     adjustImagePosition(headerImg);
   }
+
+  var imageElement = document.getElementById("topImage");
+  imageElement.addEventListener("click", function () {
+    var imageUrl = this.src;
+    window.open("image?url=" + encodeURIComponent(imageUrl), "_blank");
+  });
 });
 
 function adjustImagePosition(img) {
@@ -599,6 +605,10 @@ function addImageTo2DGallery(url) {
   img.className = "flex-img";
   img.src = url;
   img.alt = "Gallery Image";
+  img.addEventListener("click", function () {
+    var imageUrl = this.src;
+    window.open("image?url=" + encodeURIComponent(imageUrl), "_blank");
+  });
 
   // Add error handling to revoke URL in case the image fails to load
   img.onerror = () => {
@@ -860,7 +870,9 @@ function handleSceneClick() {
   const allIntersects = raycaster.intersectObjects(allObjects, true);
   const displayIntersects = raycaster.intersectObjects(displays, true);
 
-  if (displayIntersects.length > 0) {
+  if (document.getElementById("topImage").style.display === "block") {
+    hideDisplayOverlay();
+  } else if (displayIntersects.length > 0) {
     const nearestDisplay = displayIntersects[0].object;
     const nearestObject = allIntersects[0].object;
 
@@ -870,10 +882,6 @@ function handleSceneClick() {
     }
 
     handleDisplayClicked(nearestDisplay);
-  } else {
-    if (document.getElementById("topImage").style.display === "block") {
-      hideDisplayOverlay();
-    }
   }
 }
 
