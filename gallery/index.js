@@ -16,9 +16,20 @@ if (
 } else {
   IS_MOBILE = false;
 }
-document.getElementById("controls").innerHTML = IS_MOBILE
-  ? "[joystick] - move  [pinch and swipe] - camera"
-  : "[W] [A] [S] [D] - move  [scroll wheel] - zoom  [click + drag] - camera";
+const controlsContainer = document.getElementById("controls");
+
+if (IS_MOBILE) {
+  controlsContainer.innerHTML = `
+        <div>[joystick] - move</div>
+        <div>[pinch and swipe] - camera</div>
+    `;
+} else {
+  controlsContainer.innerHTML = `
+        <div>[W] [A] [S] [D] - move</div>
+        <div>[scroll wheel] - zoom</div>
+        <div>[click + drag] - camera</div>
+    `;
+}
 
 AWS.config.update({
   region: "ca-central-1",
@@ -50,7 +61,7 @@ document.addEventListener("DOMContentLoaded", function () {
   var imageElement = document.getElementById("topImage");
   imageElement.addEventListener("click", function () {
     var imageUrl = this.src;
-    window.open("image?url=" + encodeURIComponent(imageUrl), "_blank");
+    window.open("image/?url=" + encodeURIComponent(imageUrl), "_blank");
   });
 });
 
@@ -108,12 +119,21 @@ function toggleView() {
     slider.style.display = "none";
     body.style.overflow = "hidden";
     currentView = "3D";
-    controls.innerHTML = IS_MOBILE
-      ? "[joystick] - move  [pinch and swipe] - camera"
-      : "[W] [A] [S] [D] - move  [scroll wheel] - zoom  [click + drag] - camera";
     simulating = true;
     toggleImage.src = "./assets/2d.png";
     joystick.style.display = "block";
+    if (IS_MOBILE) {
+      controlsContainer.innerHTML = `
+            <div>[joystick] - move</div>
+            <div>[pinch and swipe] - camera</div>
+        `;
+    } else {
+      controlsContainer.innerHTML = `
+            <div>[W] [A] [S] [D] - move</div>
+            <div>[scroll wheel] - zoom</div>
+            <div>[click + drag] - camera</div>
+        `;
+    }
   } else {
     threeContainer.style.display = "none";
     galleryContainer.style.display = "flex";
