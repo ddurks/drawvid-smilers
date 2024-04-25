@@ -686,15 +686,18 @@ function addDisplays(x, y, z) {
     newDisplay.lookAt(new THREE.Vector3(x, y, z));
     scene.add(newDisplay);
     displays.push(newDisplay);
+    allObjects.push(newDisplay);
   });
 }
 
 const spawnedRooms = new Set();
 const existingWalls = new Set();
+var allObjects = [];
 function createRoom(x, y, z, roomSize, doorWidth, doorHeight) {
   let newRoom = room.clone();
   newRoom.position.set(x, y, z);
   scene.add(newRoom);
+  allObjects.push(newRoom);
 
   let roomX = Math.floor(x / roomSize);
   let roomZ = Math.floor(z / roomSize);
@@ -860,11 +863,19 @@ const onTouchStart = (event) => {
 function handleSceneClick() {
   raycaster.setFromCamera(mouse, camera);
 
-  const intersects = raycaster.intersectObjects(displays);
+  const allIntersects = raycaster.intersectObjects(allObjects, true);
+  const displayIntersects = raycaster.intersectObjects(displays, true);
 
-  if (intersects.length > 0) {
-    const displayClicked = intersects[0].object;
-    handleDisplayClicked(displayClicked);
+  if (displayIntersects.length > 0) {
+    const nearestDisplay = displayIntersects[0].object;
+    const nearestObject = allIntersects[0].object;
+
+    if (nearestObject !== nearestDisplay) {
+      hideDisplayOverlay();
+      return;
+    }
+
+    handleDisplayClicked(nearestDisplay);
   } else {
     if (document.getElementById("topImage").style.display === "block") {
       hideDisplayOverlay();
