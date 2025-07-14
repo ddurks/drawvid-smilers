@@ -467,7 +467,11 @@ class DrawvidDotCom extends Phaser.Scene {
 
     this.spawnClouds();
     this.spawnBackFlowers();
-    let galleryBG = this.physics.add.image(GAME.SIZE - 64, 7*GAME.SIZE / 11, "gallery-bg");
+    let galleryBG = this.physics.add.image(
+      GAME.SIZE - 64,
+      (7 * GAME.SIZE) / 11,
+      "gallery-bg"
+    );
     galleryBG.body.setAllowGravity(false);
     galleryBG.setScale(GLOBAL_SCALE);
     this.player = new Smiler(
@@ -522,10 +526,7 @@ class DrawvidDotCom extends Phaser.Scene {
     loungeButton.setDepth(10);
 
     let divedaveButton = this.add
-      .image(
-          GAME.SIZE / 8, GAME.SIZE - GLOBAL_SCALE * 32,
-        "divedave-button"
-      )
+      .image(GAME.SIZE / 8, GAME.SIZE - GLOBAL_SCALE * 32, "divedave-button")
       .setOrigin(0.5, 0)
       .setInteractive();
     divedaveButton.setScale(GLOBAL_SCALE);
@@ -569,7 +570,7 @@ class DrawvidDotCom extends Phaser.Scene {
     paradise.body.setAllowGravity(false);
     paradise.setScale(GLOBAL_SCALE);
     paradise.on("pointerdown", () => {
-      window.location.href = "http://postinparadise.com";
+      window.location.href = "/code/postinparadise";
     });
     paradise.setDepth(11);
     let about = this.physics.add
@@ -582,7 +583,7 @@ class DrawvidDotCom extends Phaser.Scene {
     });
     about.setDepth(11);
     let gallery = this.physics.add
-      .image(GAME.SIZE - 64, 7*GAME.SIZE / 11, "gallery-fg")
+      .image(GAME.SIZE - 64, (7 * GAME.SIZE) / 11, "gallery-fg")
       .setInteractive();
     gallery.body.setAllowGravity(false);
     gallery.setScale(GLOBAL_SCALE);
